@@ -203,9 +203,9 @@ body.danger #dangerOverlay{animation:danger 1s ease-in-out infinite}
 #tip .ts{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
 #tip .td{font-style:italic;color:#d6defa;margin:6px 0}
 #tip .tb{color:var(--lime)} #tip .tp{color:#ff8fa8} #tip .tc{margin-top:6px;font-weight:700;color:var(--gold)}
-#tip.docked{left:50% !important;top:auto !important;bottom:12px;transform:translateX(-50%);width:min(94vw,520px);max-width:none;max-height:45vh;overflow:hidden}
+#tip.docked{left:50% !important;top:auto !important;bottom:12px;transform:translateX(-50%);width:min(94vw,520px);max-width:none;max-height:45vh;overflow:hidden;pointer-events:auto}
 #tip.docked.top{top:12px !important;bottom:auto}
-#tip.docked::after{content:"Tap empty space to close";display:block;margin-top:6px;font-size:11px;color:var(--muted);text-align:center}
+#tip.docked::after{content:"Tap anywhere to close";display:block;margin-top:6px;font-size:11px;color:var(--muted);text-align:center}
 #modalBg{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:200}
 #modal{background:var(--panel);border:4px solid var(--gold);border-radius:16px;padding:20px;width:min(560px,92vw);max-height:88vh;overflow:auto;box-shadow:8px 8px 0 #000}
 #modal.bad{border-color:var(--red);box-shadow:0 0 60px rgba(255,0,0,.5)}
@@ -403,7 +403,6 @@ function fmtDuration(ms){
 
 /* =========================================================
    PROPERTIES
-   Each one costs about 11x the one before and earns about 7x as much.
    ========================================================= */
 const PROPERTY_LIST = [
   ["phone",   "My Phone",                "Selling Stuff Online",          "📱", "I sold my old toys online. Mom says that's 'not a real business.' Mom is WRONG."],
@@ -428,14 +427,35 @@ const PROPERTY_LIST = [
   ["univ",    "My Universe",             "Literally Everything",          "🌀", "I own EVERYTHING. Even the stuff I can't see. Even the socks that disappear in the dryer."],
   ["dim",     "My Dimension",            "Beyond Everything",             "♾️", "I opened a portal to another dimension and bought it. The other me in there is also rich. We high-fived."],
 ];
-function twoDigits(n){ // round to 2 significant digits, e.g. 28800 -> 29000
-  const p = Math.pow(10, Math.floor(Math.log10(n)) - 1);
-  return Math.round(n / p) * p;
-}
+// Prices follow a classic clicker curve: the first property is cheap, each new one costs
+// roughly 10-15x the one before, and the time it takes to pay for itself (cost / money per
+// second) roughly doubles every step, so new properties are exciting but never a no-brainer.
+//                 cost      $/sec      pays for itself in
+const BALANCE = [
+  [15,      0.1],     // My Phone                 150 s
+  [120,     1],       // My Room                  120 s
+  [1300,    8],       // My House                 ~2.7 min
+  [14000,   50],      // My Street                ~4.7 min
+  [150000,  280],     // My Neighborhood          ~9 min
+  [1.7e6,   1500],    // My City                  ~19 min
+  [2.2e7,   8500],    // My County                ~43 min
+  [3.5e8,   48000],   // My State                 ~2 h
+  [5.5e9,   290000],  // My Country               ~5 h
+  [8e10,    1.8e6],   // My Continent             ~12 h
+  [1.1e12,  1.1e7],   // My Hemisphere            ~28 h
+  [1.6e13,  7.2e7],   // My Moon                  ~2.6 days
+  [2e14,    4.7e8],   // My Planet                ~5 days
+  [2.5e15,  3.2e9],   // My Solar System          ~9 days
+  [3e16,    2.3e10],  // My Stellar Neighborhood  ~15 days
+  [3.7e17,  1.65e11], // My Galaxy                ~26 days
+  [5e18,    1.2e12],  // My Galaxy Group          ~48 days
+  [8e19,    9e12],    // My Supercluster          ~103 days
+  [1.5e21,  7e13],    // My Observable Universe   ~248 days
+  [3e22,    5.5e14],  // My Universe              ~1.7 years
+  [7e23,    4.5e15],  // My Dimension             ~5 years
+];
 const PROPS = PROPERTY_LIST.map(([key, name, sector, icon, flavor], i) => ({
-  key, name, sector, icon, flavor,
-  base: i === 0 ? 200 : twoDigits(200 * Math.pow(11, i)),
-  cps:  i === 0 ? 1   : twoDigits(Math.pow(7, i)),
+  key, name, sector, icon, flavor, base: BALANCE[i][0], cps: BALANCE[i][1],
 }));
 const TICKERS = ["PHON","ROOM","HOUS","STRT","HOOD","CITY","CNTY","STAT","CTRY","CONT","HEMI","MOON","PLNT","SOLR","STAR","GLXY","GGRP","SUPR","OBSV","UNIV","DIMN"];
 
@@ -591,8 +611,11 @@ const GLOWUPS = [
     ["Ultimate Landlord Crown", "I own everything in every dimension. The final W. GG."],
   ],
 ];
-// Owning this many of a property unlocks its next glow-up
-const GLOWUP_THRESHOLDS = [1, 10, 25, 50, 100];
+// Owning this many of a property unlocks its next glow-up...
+const GLOWUP_THRESHOLDS = [1, 5, 25, 50, 100];
+// ...and each glow-up costs this many times the property's starting price (the usual clicker ladder:
+// cheap early boosts, then big jumps that are worth saving up for)
+const GLOWUP_PRICE_X = [10, 50, 500, 50000, 5e6];
 
 /* =========================================================
    BUILD UPGRADE LIST
@@ -603,18 +626,18 @@ GLOWUPS.forEach((list, ind) => {
   list.forEach(([name, desc], k) => {
     const req = GLOWUP_THRESHOLDS[k];
     UPGRADES.push({ id:`g_${PROPS[ind].key}_${k}`, type:"glow", ind, req, name, desc,
-      cost: Math.round(base * Math.pow(COST_GROWTH, req) * 10), icon: PROPS[ind].icon });
+      cost: base * GLOWUP_PRICE_X[k], icon: PROPS[ind].icon });
   });
 });
 const CLICKS = [
   ["c0", "Gaming Mouse",                 "It has RGB lights. RGB means more money. Everybody knows that.",              100,    "x2"],
-  ["c1", "Juice Box Power-Up",           "It's apple juice. But I feel SO FAST right now.",                             1000,   "x2"],
-  ["c2", "Finger Push-Ups",              "My clicking finger has abs now. Look at it. LOOK AT IT.",                    25000,  "x2"],
-  ["c3", "Lucky Penny",                  "Found it on the sidewalk, heads up. Every click is luckier now.",            500000, "pct"],
-  ["c4", "Pro Gamer Gloves",             "Fingerless gloves, just like the pros wear. Clicks are now 'professional.'", 5e7,    "pct"],
-  ["c5", "Little Sister Auto-Clicker",   "My little sister clicks for me now. I pay her in gummy bears.",              5e9,    "pct"],
-  ["c6", "Golden Finger",                "I dipped my finger in gold paint. It's permanent now. Worth it.",            5e11,   "pct"],
-  ["c7", "THE ULTIMATE CLICK",           "One click to rule them all. My finger is a legend. Bow to the finger.",      5e13,   "pct"],
+  ["c1", "Juice Box Power-Up",           "It's apple juice. But I feel SO FAST right now.",                             500,    "x2"],
+  ["c2", "Finger Push-Ups",              "My clicking finger has abs now. Look at it. LOOK AT IT.",                    10000,  "x2"],
+  ["c3", "Lucky Penny",                  "Found it on the sidewalk, heads up. Every click is luckier now.",            1e5,    "pct"],
+  ["c4", "Pro Gamer Gloves",             "Fingerless gloves, just like the pros wear. Clicks are now 'professional.'", 1e7,    "pct"],
+  ["c5", "Little Sister Auto-Clicker",   "My little sister clicks for me now. I pay her in gummy bears.",              1e9,    "pct"],
+  ["c6", "Golden Finger",                "I dipped my finger in gold paint. It's permanent now. Worth it.",            1e11,   "pct"],
+  ["c7", "THE ULTIMATE CLICK",           "One click to rule them all. My finger is a legend. Bow to the finger.",      1e13,   "pct"],
 ];
 CLICKS.forEach(([id, name, desc, cost, kind]) => {
   UPGRADES.push({ id, type:"click", kind, name, desc, cost, unlockAt: cost * 0.4, icon: kind === "x2" ? "🖱️" : "👆" });
@@ -1030,7 +1053,22 @@ function tipHTML(key){
   return "";
 }
 let touchMode = false; // set from the last pointer type, so laptops with touchscreens work both ways
-document.addEventListener("pointerdown", e => { touchMode = e.pointerType === "touch"; }, true);
+// Touch screens: phones don't reliably send "hover" events, so taps open and close the popup directly.
+// Tapping something with a popup shows it; tapping anywhere else (or the popup itself) closes it.
+document.addEventListener("pointerdown", e => {
+  touchMode = e.pointerType === "touch";
+  if (!touchMode) return;
+  if (tip.contains(e.target)) return; // closed by the click handler below
+  const t = e.target.closest("[data-tt]");
+  if (!t) { hideTip(); return; }
+  const r = t.getBoundingClientRect();
+  tip.classList.toggle("top", r.top + r.height / 2 > innerHeight / 2); // show it on the half away from your finger
+  tipKey = t.dataset.tt; tip.style.display = "block"; refreshTip();
+}, true);
+// The popup sits on top of the page on phones. Swallow the tap that closes it so it doesn't
+// also press whatever is underneath.
+tip.addEventListener("click", e => { e.stopPropagation(); e.preventDefault(); hideTip(); });
+document.addEventListener("scroll", () => { if (touchMode) hideTip(); }, true);
 function placeTip(){
   tip.classList.toggle("docked", touchMode);
   if (touchMode) return; // CSS pins it to the bottom
@@ -1043,12 +1081,9 @@ function placeTip(){
 function refreshTip(){ if (tipKey) { tip.innerHTML = tipHTML(tipKey); placeTip(); } }
 function hideTip(){ tipKey = null; tip.style.display = "none"; }
 document.addEventListener("mouseover", e => {
+  if (touchMode) return; // taps are handled above
   const t = e.target.closest("[data-tt]");
   if (!t) { hideTip(); return; }
-  if (touchMode) {
-    const r = t.getBoundingClientRect();
-    tip.classList.toggle("top", r.top + r.height / 2 > innerHeight / 2);
-  }
   if (t.dataset.tt !== tipKey) { tipKey = t.dataset.tt; tip.style.display = "block"; refreshTip(); }
 });
 document.addEventListener("mousemove", e => { tipX = e.clientX; tipY = e.clientY; if (tipKey && !touchMode) placeTip(); });
