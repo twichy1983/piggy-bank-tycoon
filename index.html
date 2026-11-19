@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coin Clicker</title>
+<style>
+:root{
+  --bg:#0f1730; --panel:#17214a; --panel2:#1e2a5a; --line:#2f3f7a;
+  --gold:#ffd54a; --gold2:#b8860b; --pink:#ff4fd8; --lime:#7CFC7C; --cyan:#4fd8ff;
+  --red:#ff3b3b; --text:#f5f7ff; --muted:#9fb0e0;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;height:100%}
+body{
+  background:radial-gradient(ellipse at 20% 0%,#2b3a75 0%,#141b3b 55%,#0a0f22 100%);
+  color:var(--text); font-family:"Comic Sans MS","Comic Neue","Chalkboard SE","Segoe Print",cursive,sans-serif;
+  overflow:hidden; user-select:none;
+}
+button{font-family:inherit;cursor:pointer}
+#app{display:grid;grid-template-columns:minmax(300px,1fr) minmax(380px,1.25fr) minmax(340px,1fr);height:100vh}
+.col{overflow-y:auto;padding:16px;border-right:3px dashed var(--line)}
+.col:last-child{border-right:none}
+.col::-webkit-scrollbar{width:10px}.col::-webkit-scrollbar-thumb{background:var(--pink);border-radius:5px}
+h2{font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin:18px 0 8px;border-bottom:3px solid var(--line);padding-bottom:6px}
+.sticker{display:inline-block;font-size:11px;font-weight:900;background:var(--pink);color:#fff;padding:2px 8px;border-radius:999px;
+  transform:rotate(6deg);margin-left:6px;letter-spacing:0;box-shadow:0 2px 0 #8a1f74;vertical-align:middle}
+
+/* ---------- LEFT: bank + big coin ---------- */
+.brand{text-align:center}
+.brand h1{margin:6px 0 0;font-size:38px;letter-spacing:3px;font-weight:900;display:inline-block;
+  background:linear-gradient(90deg,#ff4f4f,#ffb84f,#ffe94f,#5dff6b,#4fd8ff,#b06bff,#ff4fd8);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(3px 3px 0 #000);animation:wiggle 3s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg) scale(1.03)}}
+.brand .tag{font-size:13px;color:var(--gold);margin-top:2px}
+.nameRow{position:relative;max-width:320px;margin:12px auto 0}
+#companyName{display:block;width:100%;text-align:center;background:rgba(0,0,0,.25);border:2px dashed #4b5fa8;
+  color:var(--gold);font-family:inherit;font-size:17px;font-weight:700;padding:6px 30px;border-radius:10px;cursor:text;user-select:text;-webkit-user-select:text}
+#companyName:hover{border-color:var(--gold)}
+#companyName:focus{border-style:solid;border-color:var(--gold);background:rgba(0,0,0,.5);outline:none}
+#editName{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:16px;padding:4px 6px}
+#editName:hover{color:var(--gold)}
+.bank{text-align:center;margin:14px 0 6px;background:rgba(0,0,0,.35);border:3px solid var(--gold2);border-radius:14px;padding:12px}
+#dollars{font-size:clamp(24px,2.8vw,40px);font-weight:900;color:#fff7d1;text-shadow:3px 3px 0 #000,0 0 14px rgba(255,213,74,.5);word-break:break-word}
+#cps{font-size:15px;color:var(--lime);margin-top:4px}
+#coinWrap{position:relative;display:flex;justify-content:center;align-items:center;height:320px}
+#coinWrap::before,#coinWrap::after{content:"";position:absolute;width:262px;height:262px;border-radius:50%;
+  border:3px solid rgba(255,213,74,.6);animation:ripple 3s ease-out infinite;pointer-events:none}
+#coinWrap::after{animation-delay:1.5s}
+@keyframes ripple{from{transform:scale(1);opacity:.8}to{transform:scale(1.35);opacity:0}}
+#coin{position:relative;width:250px;height:250px;border-radius:50%;border:10px solid var(--gold2);padding:0;
+  background:radial-gradient(circle at 35% 30%,#fff3a6 0%,#ffd700 35%,#d4a017 75%,#a57c00 100%);
+  box-shadow:0 0 40px rgba(255,215,0,.5),inset 0 -8px 16px rgba(0,0,0,.25),0 14px 30px rgba(0,0,0,.6);
+  transition:transform .08s ease;display:flex;align-items:center;justify-content:center}
+#coin span{font-family:Georgia,serif;font-weight:900;font-size:150px;line-height:1;color:#9a6f00;
+  text-shadow:2px 2px 0 #fff3a6,-2px -2px 0 #7a5600;pointer-events:none}
+#coin:hover{transform:scale(1.05) rotate(-3deg)}
+#coin:active{transform:scale(.94)}
+#coin.pop{animation:pop .12s ease}
+@keyframes pop{50%{transform:scale(.92) rotate(5deg)}}
+#clickInfo{text-align:center;color:var(--muted);font-size:14px}
+.floater{position:fixed;pointer-events:none;font-weight:900;color:var(--lime);font-size:22px;text-shadow:2px 2px 0 #000;
+  animation:floatUp 1s ease-out forwards;z-index:50;white-space:nowrap}
+.floater.auto{color:var(--cyan);font-size:18px}
+@keyframes floatUp{to{transform:translateY(-90px) rotate(-8deg);opacity:0}}
+#ticker{margin-top:16px;background:#fffbe6;color:#3a2a00;border:3px solid #000;border-radius:10px;padding:10px 12px;font-size:14px;min-height:62px;
+  transition:opacity .4s;transform:rotate(-1deg);box-shadow:4px 4px 0 #000}
+#ticker b{color:#d61f9e;letter-spacing:1px;margin-right:6px}
+
+/* ---------- CENTER: the tax man ---------- */
+#tax{position:relative;border:4px solid var(--red);border-radius:14px;padding:0 16px 16px;text-align:center;overflow:hidden;
+  background:repeating-linear-gradient(45deg,#3a0610 0 16px,#2a0309 16px 32px);
+  box-shadow:0 0 30px rgba(255,0,0,.45),inset 0 0 60px rgba(0,0,0,.7);animation:taxpulse 2s ease-in-out infinite}
+@keyframes taxpulse{50%{box-shadow:0 0 55px rgba(255,0,0,.8),inset 0 0 60px rgba(0,0,0,.7)}}
+#tax.urgent{animation:taxpulse .45s ease-in-out infinite}
+.tax-stripe{height:14px;margin:0 -16px;background:repeating-linear-gradient(-45deg,var(--red) 0 12px,#000 12px 24px)}
+.tax-head{margin:0 -16px 10px;background:#000;color:var(--red);font-weight:900;letter-spacing:2px;font-size:15px;padding:6px}
+#taxLabel{font-weight:900;letter-spacing:3px;color:#ffb3b3;font-size:15px}
+#taxAmt{font-family:"Courier New",Consolas,monospace;font-weight:900;font-size:clamp(28px,3.4vw,50px);color:var(--red);line-height:1.15;
+  text-shadow:0 0 6px #ff0000,0 0 20px #b00000;word-break:break-word;margin:6px 0}
+.tax-timer{font-weight:800;letter-spacing:2px;color:#ffd5d5;font-size:14px}
+#taxTimer{display:block;font-family:"Courier New",Consolas,monospace;font-size:clamp(32px,3.6vw,52px);color:#fff;letter-spacing:4px;
+  text-shadow:0 0 10px #ff2a2a,0 0 24px #a00}
+#tax.urgent #taxTimer{animation:blink .9s steps(2) infinite}
+@keyframes blink{50%{color:var(--red)}}
+.tax-bar{height:14px;background:#000;border:2px solid #600;border-radius:7px;overflow:hidden;margin:10px 0}
+#taxBar{height:100%;width:100%;background:linear-gradient(90deg,#ff2424,#ff7a1a,#ffe94f);transition:width .3s linear}
+#taxInfo{font-size:13px;color:#ffc9c9;margin-bottom:10px;line-height:1.5}
+#payBtn{width:100%;padding:14px;font-size:19px;font-weight:900;letter-spacing:1px;border-radius:12px;border:3px solid #fff;
+  background:linear-gradient(180deg,#ff3b3b,#a30000);color:#fff;text-shadow:2px 2px 0 #000;box-shadow:0 5px 0 #4a0000}
+#payBtn:hover:not(:disabled){filter:brightness(1.15)}
+#payBtn:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 #4a0000}
+#payBtn:disabled{background:#3a1010;color:#a77;border-color:#622;box-shadow:none;cursor:not-allowed}
+#tax.refund{border-color:var(--lime);background:repeating-linear-gradient(45deg,#06301a 0 16px,#042412 16px 32px);animation:none;box-shadow:0 0 30px rgba(124,252,124,.4)}
+#tax.refund .tax-stripe{background:repeating-linear-gradient(-45deg,var(--lime) 0 12px,#000 12px 24px)}
+#tax.refund .tax-head{color:var(--lime)}
+#tax.refund #taxAmt{color:var(--lime);text-shadow:0 0 8px #7CFC7C,0 0 24px #0a7a3a}
+#tax.refund #taxLabel,#tax.refund .tax-timer,#tax.refund #taxInfo{color:#d4ffd4}
+#tax.refund #taxTimer{text-shadow:0 0 10px #7CFC7C}
+#tax.refund #taxBar{background:linear-gradient(90deg,#7CFC7C,#ffe94f)}
+#tax.refund #payBtn{background:linear-gradient(180deg,#5ee65e,#178a2f);box-shadow:0 5px 0 #063d1d}
+#dangerOverlay{position:fixed;inset:0;pointer-events:none;z-index:40}
+body.danger #dangerOverlay{animation:danger 1s ease-in-out infinite}
+@keyframes danger{50%{box-shadow:inset 0 0 120px 20px rgba(255,0,0,.45)}}
+
+.helpers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.helpBtn{text-align:left;background:var(--panel2);border:3px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--text);box-shadow:0 4px 0 #0a1030}
+.helpBtn:hover:not(.cant){border-color:var(--gold)}
+.helpBtn:active:not(.cant){transform:translateY(3px);box-shadow:0 1px 0 #0a1030}
+.helpBtn .t{font-weight:800;font-size:15px}
+.helpBtn .d{font-size:12px;color:var(--muted);margin:3px 0 6px}
+.helpBtn .c{font-weight:700;color:var(--lime)}
+.helpBtn .n{float:right;font-size:24px;font-weight:900;color:var(--gold)}
+.helpCol{display:flex;flex-direction:column;gap:4px}
+.helpCol .helpBtn{flex:1}
+.fireBtn{background:transparent;border:2px dashed #7a2a4a;color:#ff9bc8;border-radius:8px;padding:5px 8px;font-size:12px;font-weight:700}
+.fireBtn:hover:not(:disabled){background:#2a0d1d;border-style:solid}
+.fireBtn:disabled{opacity:.35;cursor:not-allowed}
+.cant{opacity:.55}
+.cant .c,.cant .cost{color:#ff8080 !important}
+
+.tabs{display:flex;gap:4px;margin-top:18px;border-bottom:3px solid var(--line);flex-wrap:wrap}
+.tab{background:transparent;border:3px solid transparent;border-bottom:none;color:var(--muted);padding:8px 12px;font-weight:700;border-radius:10px 10px 0 0}
+.tab.on{background:var(--panel);border-color:var(--line);color:var(--text)}
+.tabBody{background:var(--panel);border:3px solid var(--line);border-top:none;border-radius:0 0 12px 12px;padding:12px;font-size:14px}
+#glowLog details{border-bottom:2px dashed var(--line);padding:6px 0}
+#glowLog summary{cursor:pointer;font-weight:700}
+#glowLog summary .sec{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+#glowLog p{margin:6px 0 2px 22px;color:#d0d8f5;font-size:13px;line-height:1.45}
+.empty{color:var(--muted);font-style:italic}
+#stats div{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #2c3a70}
+#stats span:last-child{font-weight:700;color:#fff7d1;text-align:right}
+.saveBtns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{background:var(--panel2);border:3px solid var(--line);color:var(--text);padding:8px 12px;border-radius:10px;font-weight:700;box-shadow:0 3px 0 #0a1030}
+.btn:hover{border-color:var(--lime)}
+.btn.danger{border-color:#7a1b3b;color:#ff9bc8}
+.btn.danger:hover{background:#3a0f22}
+.note{color:var(--muted);font-size:12px;margin-top:10px;line-height:1.5}
+
+/* ---------- CENTER: housing market ---------- */
+.mkt{background:#0a1028;border:3px solid var(--line);border-radius:12px;padding:10px 12px}
+.mktHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.mktName{font-weight:800;font-size:15px;letter-spacing:1px}
+.mktSub{font-size:11px;color:var(--muted)}
+.mktPx{text-align:right;white-space:nowrap}
+#idxPx{font-family:Consolas,"Courier New",monospace;font-weight:800;font-size:18px;color:#fff7d1}
+.chg{font-family:Consolas,"Courier New",monospace;font-size:12px;font-weight:700;color:var(--muted)}
+.chg.up{color:var(--lime)} .chg.down{color:#ff5c8a}
+#idxChart{display:block;width:100%;height:150px;cursor:crosshair}
+.tickers{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:8px}
+.tk{background:#0a1028;border:2px solid var(--line);border-radius:8px;padding:6px 8px}
+.tk:hover{border-color:var(--cyan)}
+.tkTop{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.tkSym{font-family:Consolas,"Courier New",monospace;font-weight:800;font-size:13px;letter-spacing:1px}
+.tkPx{font-family:Consolas,"Courier New",monospace;font-size:12px;white-space:nowrap}
+.tk canvas{display:block;width:100%;height:38px;margin-top:3px}
+.tickers .empty{grid-column:1/-1;font-size:13px}
+
+/* ---------- RIGHT: store ---------- */
+.secHead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:18px 0 8px;border-bottom:3px solid var(--line);padding-bottom:6px}
+.secHead:first-child{margin-top:0}
+.secHead h2{margin:0;border:none;padding:0}
+.secHead .count{font-size:12px;color:var(--muted)}
+#upgrades{display:flex;flex-direction:column;gap:5px}
+.upg{display:grid;grid-template-columns:28px 1fr auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;width:100%;text-align:left;
+  background:var(--panel2);border:2px solid var(--line);border-left:6px solid var(--pink);border-radius:10px;padding:6px 10px;color:var(--text)}
+.upg .uIc{grid-row:1/3;font-size:20px;text-align:center}
+.upg .uNm{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upg .uTag{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upg .uCost{grid-column:3;grid-row:1/3;font-weight:800;font-size:13px;color:var(--lime);white-space:nowrap}
+.upg.click{border-left-color:var(--cyan)}
+.upg:hover:not(.cant){filter:brightness(1.2)}
+.upg.cant{opacity:.5} .upg.cant .uCost{color:#ff8080}
+.upgMore{background:none;border:2px dashed var(--line);color:var(--muted);padding:6px;border-radius:8px;font-size:12px;font-weight:700}
+.upgMore:hover{color:var(--text);border-color:var(--pink)}
+.buyAmt{display:flex;gap:2px;background:#0a1028;border:2px solid var(--line);border-radius:999px;padding:2px}
+.buyAmt button{background:none;border:none;color:var(--muted);padding:3px 10px;border-radius:999px;font-weight:800;font-size:12px}
+.buyAmt button.on{color:#3a2a00;background:var(--gold)}
+.bld{display:block;width:100%;text-align:left;background:var(--panel);border:3px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px;color:var(--text);box-shadow:0 4px 0 #0a1030}
+.bld:hover:not(.cant):not(.mystery){border-color:var(--gold)}
+.bld:active:not(.cant):not(.mystery){transform:translateY(3px);box-shadow:0 1px 0 #0a1030}
+.bld .bTop{display:flex;align-items:center;gap:8px}
+.bld .ic{font-size:24px;width:30px;text-align:center}
+.bld .info{flex:1;min-width:0}
+.bld .nm{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bld .sec{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bld .tkr{font-family:Consolas,"Courier New",monospace;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gold);border:2px solid #6a5a1a;border-radius:6px;padding:1px 5px}
+.bld .bBot{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px}
+.bld .own{background:#0a1028;border:2px solid var(--line);border-radius:999px;padding:2px 8px;color:#fff7d1;font-weight:700;white-space:nowrap}
+.bld .rate{color:var(--lime);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bld .cost{font-weight:800;color:#3a2a00;background:var(--gold);border-radius:8px;padding:3px 8px;white-space:nowrap}
+.bld.cant .cost{background:#4a2030;color:#ff9bb0}
+.bld.mystery{border-style:dashed;background:transparent;cursor:default;opacity:.7;box-shadow:none}
+.bld.mystery .cost,.bld.mystery .tkr,.bld.mystery .own{display:none}
+.bld.mystery .rate{color:var(--muted)}
+
+/* ---------- tooltip / modal / toast ---------- */
+#tip{position:fixed;z-index:100;max-width:340px;background:#0b1130;border:3px solid var(--cyan);border-radius:12px;padding:10px 12px;font-size:13px;
+  box-shadow:6px 6px 0 #000;pointer-events:none;display:none;line-height:1.45}
+#tip .tn{font-weight:900;font-size:16px;color:#fff}
+#tip .ts{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+#tip .td{font-style:italic;color:#d6defa;margin:6px 0}
+#tip .tb{color:var(--lime)} #tip .tp{color:#ff8fa8} #tip .tc{margin-top:6px;font-weight:700;color:var(--gold)}
+#tip.docked{left:50% !important;top:auto !important;bottom:12px;transform:translateX(-50%);width:min(94vw,520px);max-width:none;max-height:45vh;overflow:hidden}
+#tip.docked.top{top:12px !important;bottom:auto}
+#tip.docked::after{content:"Tap empty space to close";display:block;margin-top:6px;font-size:11px;color:var(--muted);text-align:center}
+#modalBg{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:200}
+#modal{background:var(--panel);border:4px solid var(--gold);border-radius:16px;padding:20px;width:min(560px,92vw);max-height:88vh;overflow:auto;box-shadow:8px 8px 0 #000}
+#modal.bad{border-color:var(--red);box-shadow:0 0 60px rgba(255,0,0,.5)}
+#modal h3{margin:0 0 10px;font-size:24px}
+#modal.bad h3{color:var(--red)}
+#modal textarea{width:100%;height:140px;background:#060a1c;color:var(--lime);border:2px solid var(--line);border-radius:8px;font-family:Consolas,monospace;font-size:12px;padding:8px;user-select:text}
+#modal .row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+#toasts{position:fixed;left:16px;bottom:16px;z-index:150;display:flex;flex-direction:column;gap:6px}
+.toast{background:#0b1130;border:2px solid var(--line);border-left:6px solid var(--lime);padding:8px 12px;border-radius:10px;font-size:13px;max-width:330px;animation:tin .3s ease;box-shadow:3px 3px 0 #000}
+.toast.bad{border-left-color:var(--red)}
+.toast.gold{border-left-color:var(--gold);color:#fff3cf}
+@keyframes tin{from{transform:translateX(-30px);opacity:0}}
+.achHead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-weight:700}
+.achBar{height:10px;background:#000;border:2px solid var(--line);border-radius:5px;overflow:hidden;margin-bottom:10px}
+.achBar div{height:100%;background:linear-gradient(90deg,var(--pink),var(--gold))}
+.achCat{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin:10px 0 5px}
+.achCat span{float:right;letter-spacing:0}
+.achGrid{display:flex;flex-wrap:wrap;gap:5px}
+.ach{width:44px;height:44px;border-radius:10px;border:3px solid var(--gold2);background:radial-gradient(circle,#3a3010,#1a1505);
+  display:flex;align-items:center;justify-content:center;font-size:22px}
+.ach.locked{border-color:var(--line);background:#0a1028;filter:grayscale(1);opacity:.35;font-size:16px}
+.ach:hover{filter:brightness(1.3)}
+footer{font-size:12px;color:#6f80b5;margin-top:18px;line-height:1.5}
+
+@media (max-width:1050px){
+  body{overflow:auto}
+  #app{grid-template-columns:1fr;height:auto}
+  .col{overflow:visible;border-right:none;border-bottom:3px dashed var(--line)}
+}
+</style>
+</head>
+<body>
+<div id="dangerOverlay"></div>
+<div id="app">
+  <!-- LEFT -->
+  <div class="col" id="left">
+    <div class="brand">
+      <h1>COIN CLICKER</h1>
+      <div class="tag">the BEST real estate game ever made 🏆 (by me)</div>
+    </div>
+    <div class="nameRow">
+      <input id="companyName" maxlength="40" spellcheck="false" autocomplete="off" title="Click to rename your company" aria-label="Company name">
+      <button id="editName" title="Rename your company" aria-label="Rename your company">✏️</button>
+    </div>
+    <div class="bank">
+      <div id="dollars">$0</div>
+      <div id="cps">per second: $0</div>
+    </div>
+    <div id="coinWrap"><button id="coin" aria-label="Click the coin"><span>W</span></button></div>
+    <div id="clickInfo">+$1 per click</div>
+    <div id="ticker"><b>📰 NEWS</b><span id="tickerText">Local kid starts real estate empire. Mom says "that's nice, sweetie."</span></div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="col" id="center">
+    <section id="tax">
+      <div class="tax-stripe"></div>
+      <div class="tax-head" id="taxHead">😱 THE TAX MAN IS COMING 😱</div>
+      <div id="taxLabel">PROPERTY TAXES OWED</div>
+      <div id="taxAmt">$0</div>
+      <div class="tax-timer" id="timerLabel">HE GETS HERE IN<span id="taxTimer">24:00:00</span></div>
+      <div class="tax-bar"><div id="taxBar"></div></div>
+      <div id="taxInfo"></div>
+      <button id="payBtn">PAY THE TAX MAN</button>
+    </section>
+
+    <h2>Helpers <span class="sticker">HIRE THEM!!</span></h2>
+    <div class="helpers">
+      <div class="helpCol">
+        <button class="helpBtn" id="timerHelpBtn" data-tt="help:timer">
+          <span class="n" id="timerHelpN">0</span>
+          <div class="t">⏳ Tax Extension Guy</div>
+          <div class="d">+1 hour before the Tax Man shows up.</div>
+          <div class="c" id="timerHelpC">$0</div>
+        </button>
+        <button class="fireBtn" id="timerFireBtn" data-tt="fire:timer">Fire one · <span id="timerFireC">$0</span></button>
+      </div>
+      <div class="helpCol">
+        <button class="helpBtn" id="nerdHelpBtn" data-tt="help:nerd">
+          <span class="n" id="nerdHelpN">0</span>
+          <div class="t">🤓 Math Nerd Accountant</div>
+          <div class="d">−1% property taxes. Can go NEGATIVE.</div>
+          <div class="c" id="nerdHelpC">$0</div>
+        </button>
+        <button class="fireBtn" id="nerdFireBtn" data-tt="fire:nerd">Fire one · <span id="nerdFireC">$0</span></button>
+      </div>
+    </div>
+
+    <h2>Housing Market <span class="sticker">LIVE!!!</span></h2>
+    <div class="mkt">
+      <div class="mktHead">
+        <div>
+          <div class="mktName">CCHX · Coin Clicker Housing Index</div>
+          <div class="mktSub">How much all your properties make per second, times how hyped people are · last 3 min</div>
+        </div>
+        <div class="mktPx"><div id="idxPx">$0</div><div id="idxChg" class="chg">—</div></div>
+      </div>
+      <canvas id="idxChart" aria-label="Housing index chart"></canvas>
+    </div>
+    <div class="tickers" id="tickers"></div>
+
+    <div class="tabs">
+      <button class="tab on" data-tab="log">📒 Glow-Up Log</button>
+      <button class="tab" data-tab="stats">📊 Stats</button>
+      <button class="tab" data-tab="ach">🏆 <span id="achTabCount">0</span></button>
+      <button class="tab" data-tab="save">💾 Save</button>
+    </div>
+    <div class="tabBody" id="tab-log"><div id="glowLog"></div></div>
+    <div class="tabBody" id="tab-stats" hidden><div id="stats"></div></div>
+    <div class="tabBody" id="tab-ach" hidden><div id="achievements"></div></div>
+    <div class="tabBody" id="tab-save" hidden>
+      <div class="saveBtns">
+        <button class="btn" id="saveNow">💾 Save now</button>
+        <button class="btn" id="exportBtn">📤 Export save</button>
+        <button class="btn" id="importBtn">📥 Import save</button>
+        <button class="btn danger" id="startOverBtn">🏚️ Sell everything &amp; start over</button>
+        <button class="btn danger" id="resetBtn">🔥 Delete EVERYTHING</button>
+      </div>
+      <div class="note" id="saveNote">Saves to this browser every 30 seconds.</div>
+      <div class="note">The Tax Man's clock keeps ticking even when this tab is closed. If he shows up and you still owe taxes, you get FORECLOSED and lose all your stuff. Your properties keep earning while you're gone too, but only for up to 24 hours.</div>
+    </div>
+    <footer>Made by a kid who is gonna be a real estate billionaire someday. All jokes are jokes. Please do not actually buy the moon without asking your parents first.</footer>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="col" id="right">
+    <div class="secHead"><h2>✨ Glow-Ups</h2><span class="count" id="upgCount"></span></div>
+    <div id="upgrades"></div>
+    <div class="secHead"><h2>🏠 Properties</h2>
+      <div class="buyAmt" role="group" aria-label="How many to buy">
+        <button data-amt="1" class="on">×1</button><button data-amt="10">×10</button><button data-amt="100">×100</button>
+      </div>
+    </div>
+    <div id="buildings"></div>
+  </div>
+</div>
+
+<div id="tip"></div>
+<div id="modalBg"><div id="modal"></div></div>
+<div id="toasts"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   CONSTANTS
+   ========================================================= */
+const SAVE_KEY = "coinClicker.v2";
+const OLD_SAVE_KEY = "coinClicker";   // the simple version of the game
+const HOUR = 3600 * 1000;
+const BASE_TIMER = 24 * HOUR;         // the Tax Man comes every 24 hours
+const BASE_TAX_RATE = 0.10;           // taxes are 10% of everything you earn, times the tax multiplier
+const COST_GROWTH = 1.15;             // each property costs 15% more than the last one
+const MAX_AWAY = 24 * HOUR;           // properties only earn for 24 hours while the game is closed
+const TIMER_HELP = { base: 50000, growth: 1.6 };
+const NERD_HELP  = { base: 10000, growth: 1.3 };
+
+/* =========================================================
+   NUMBER FORMATTING
+   ========================================================= */
+const SMALL_ILLIONS = ["million","billion","trillion","quadrillion","quintillion","sextillion","septillion","octillion","nonillion"];
+const UNITS = ["","un","duo","tre","quattuor","quin","sex","septen","octo","novem"];
+const TENS  = ["","dec","vigint","trigint","quadragint","quinquagint","sexagint","septuagint","octogint","nonagint"];
+function illionName(i){ // i=1 -> million (10^6), i=10 -> decillion (10^33)
+  if (i <= 9) return SMALL_ILLIONS[i-1];
+  if (i === 100) return "centillion";
+  if (i > 100) return null;
+  return UNITS[i % 10] + TENS[Math.floor(i / 10)] + "illion";
+}
+function fmt(n){
+  if (!isFinite(n)) return "∞";
+  const neg = n < 0; n = Math.abs(n);
+  let s;
+  if (n < 1000) s = (n < 1 && n % 1) ? n.toFixed(2) : (n < 100 && n % 1) ? n.toFixed(1) : Math.floor(n).toString();
+  else if (n < 1e6) s = Math.floor(n).toLocaleString("en-US");
+  else {
+    let k = Math.floor(parseInt(n.toExponential().split("e")[1], 10) / 3);
+    let v = (n / Math.pow(10, k * 3)).toFixed(3);
+    if (v === "1000.000") { k++; v = "1.000"; }
+    const name = illionName(k - 1);
+    s = name ? v + " " + name : n.toExponential(3);
+  }
+  return (neg ? "-" : "") + s;
+}
+const money = n => (n < 0 ? "-$" : "$") + fmt(Math.abs(n));
+function fmtTime(ms){
+  ms = Math.max(0, ms);
+  const t = Math.floor(ms / 1000);
+  const h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+  return String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+}
+function fmtDuration(ms){
+  const t = Math.floor(ms / 1000), d = Math.floor(t / 86400), h = Math.floor(t % 86400 / 3600), m = Math.floor(t % 3600 / 60);
+  return (d ? d + "d " : "") + (h ? h + "h " : "") + m + "m";
+}
+
+/* =========================================================
+   PROPERTIES
+   Each one costs about 11x the one before and earns about 7x as much.
+   ========================================================= */
+const PROPERTY_LIST = [
+  ["phone",   "My Phone",                "Selling Stuff Online",          "📱", "I sold my old toys online. Mom says that's 'not a real business.' Mom is WRONG."],
+  ["room",    "My Room",                 "Bedroom Rentals",               "🛏️", "I rent the top bunk to my little brother for 5 bucks a night. He doesn't know he already lives here."],
+  ["house",   "My House",                "Family Real Estate",            "🏠", "Okay technically it's my parents' house. But I know the WiFi password, so who's REALLY in charge?"],
+  ["street",  "My Street",               "Sidewalk Empire",               "🛣️", "Every lemonade stand on this street pays me rent now. I am the lemonade landlord."],
+  ["hood",    "My Neighborhood",         "HOA President (Self-Elected)",  "🏘️", "I made myself president of the neighborhood. Nobody voted. Nobody said no either."],
+  ["city",    "My City",                 "Downtown Development",          "🏙️", "I bought the whole city. First new law: pizza every Friday. Second new law: also pizza on Tuesday."],
+  ["county",  "My County",               "County Fair Grounds",           "🗺️", "I own the county fair now. The giant pumpkin pays rent. It is a VERY big pumpkin."],
+  ["state",   "My State",                "State-Sized Property",          "🏛️", "I put my face on the state flag. It's me doing a thumbs up. Very official."],
+  ["country", "My Country",              "National Real Estate",          "🏳️", "I own a whole country. The national anthem is just me yelling 'W' really loud."],
+  ["cont",    "My Continent",            "Continental Holdings",          "🌍", "A continent is like a country but with extra countries inside. Collect them all."],
+  ["hemi",    "My Hemisphere",           "Half the Planet",               "🌐", "I own the top half of the Earth. The bottom half is jealous."],
+  ["moon",    "My Moon",                 "Lunar Lots",                    "🌙", "Moon houses have the best view. Also low gravity, so you can dunk on literally anyone."],
+  ["planet",  "My Planet",               "Planetary Property",            "🌎", "I own Earth. Everyone pays me rent now, even my teacher. ESPECIALLY my teacher."],
+  ["solar",   "My Solar System",         "Sun-Powered Rentals",           "☀️", "8 planets, 1 landlord. Pluto applied again but got rejected again. Sorry Pluto."],
+  ["stellar", "My Stellar Neighborhood", "Star Block Party",              "✨", "My neighbors are stars now. Like actual stars. They are VERY hot and bad at parties."],
+  ["galaxy",  "My Galaxy",               "Galactic Real Estate",          "🌌", "A hundred billion stars and every single one pays me rent. Space taxes are gonna be insane."],
+  ["group",   "My Galaxy Group",         "Galaxy Squad",                  "💫", "Me and my galaxies have a group chat. It's mostly memes."],
+  ["super",   "My Supercluster",         "Super Duper Cluster",           "🌠", "It's called a supercluster because it is SUPER. Scientists said that. Probably."],
+  ["observe", "My Observable Universe",  "Everything You Can See",        "🔭", "If you can see it, I own it. Stop looking at my stuff."],
+  ["univ",    "My Universe",             "Literally Everything",          "🌀", "I own EVERYTHING. Even the stuff I can't see. Even the socks that disappear in the dryer."],
+  ["dim",     "My Dimension",            "Beyond Everything",             "♾️", "I opened a portal to another dimension and bought it. The other me in there is also rich. We high-fived."],
+];
+function twoDigits(n){ // round to 2 significant digits, e.g. 28800 -> 29000
+  const p = Math.pow(10, Math.floor(Math.log10(n)) - 1);
+  return Math.round(n / p) * p;
+}
+const PROPS = PROPERTY_LIST.map(([key, name, sector, icon, flavor], i) => ({
+  key, name, sector, icon, flavor,
+  base: i === 0 ? 200 : twoDigits(200 * Math.pow(11, i)),
+  cps:  i === 0 ? 1   : twoDigits(Math.pow(7, i)),
+}));
+const TICKERS = ["PHON","ROOM","HOUS","STRT","HOOD","CITY","CNTY","STAT","CTRY","CONT","HEMI","MOON","PLNT","SOLR","STAR","GLXY","GGRP","SUPR","OBSV","UNIV","DIMN"];
+
+/* =========================================================
+   GLOW-UPS (each one: that property earns x2, property taxes +1%)
+   ========================================================= */
+const GLOWUPS = [
+  [ // My Phone
+    ["Cracked Screen Fix", "I fixed the crack with tape. It's basically brand new. Buyers can't even tell. (They can tell.)"],
+    ["Glitter Phone Case", "Glitter makes everything worth more. That's just science."],
+    ["Unlimited Data Plan", "Now I can post listings 24/7. Even at 3am. Even during dinner. (Mom took my phone for a week.)"],
+    ["Second Phone", "Two phones means double the business. Also double the notifications. My pocket never stops buzzing."],
+    ["Golden Phone", "It's made of actual gold. Okay, it's gold spray paint. But it LOOKS like real gold and that's what matters."],
+  ],
+  [ // My Room
+    ["Make the Bed", "First time ever. Room value went up like 1000%. Mom cried happy tears."],
+    ["RGB Lights", "Rainbow lights make any room look like a pro gaming setup. Renters LOVE it."],
+    ["Mini Fridge", "Snacks within arm's reach at all times. This is called 'luxury living.'"],
+    ["Gaming Chair", "It has cup holders AND it leans back AND it spins. Top-tier furniture."],
+    ["Secret Trapdoor", "It doesn't lead anywhere. But it's a SECRET TRAPDOOR. Do you know how cool that is?"],
+  ],
+  [ // My House
+    ["Mow the Lawn", "Curb appeal is a real thing. I learned it from a home makeover show at 2am."],
+    ["Backyard Trampoline", "Every house is better with a trampoline. That's not my opinion, that's a fact."],
+    ["Pool (Inflatable)", "It's a pool. It's above ground. It's also leaking a little. Still counts."],
+    ["Treehouse Penthouse", "No grown-ups allowed. Rent is 100 bucks a month, paid in candy."],
+    ["Waterslide From the Roof", "The insurance guy said no. I said yes. I'm the landlord."],
+  ],
+  [ // My Street
+    ["Fix the Potholes", "I filled them with sand from my sandbox. Cars bounce a little less now."],
+    ["Lemonade Stand on Every Corner", "One stand per corner. All of them pay me. I am the lemonade boss."],
+    ["Ice Cream Truck Parking Spot", "The ice cream truck parks here now. Property values went WAY up."],
+    ["Street Named After Me", "I put up a sign with my name on it. I used permanent marker, so it's official."],
+    ["Block Party Every Weekend", "Bounce house. DJ. Hot dogs. Everybody wants to live here now."],
+  ],
+  [ // My Neighborhood
+    ["Welcome Sign", "WELCOME TO THE BEST NEIGHBORHOOD. I spelled 'neighborhood' right on the third try."],
+    ["Neighborhood Pool", "A real pool this time. With a diving board. And a lifeguard (it's my cousin)."],
+    ["Skate Park", "Rails, ramps, a half-pipe. Property values: SENDING IT."],
+    ["Free WiFi Everywhere", "The password is 'password123'. Nobody will ever guess it."],
+    ["Full-Size Candy Bars on Halloween", "Every house gives out full-size candy bars now. People move here JUST for this."],
+  ],
+  [ // My City
+    ["Pizza Place on Every Block", "Real estate rule #1: location, location, PIZZA."],
+    ["Roller Coaster Downtown", "Everybody rides a roller coaster to work now. Nobody is late. Some people are a little sick."],
+    ["Giant Statue of Me", "It's 300 feet tall and it's doing a dab. Tourists LOVE it."],
+    ["No School on Fridays", "I'm in charge now. Three-day weekends forever. Families are moving here by the millions."],
+    ["Laser Tag Subway", "The subway is a laser tag arena now. It still gets you to work. Mostly."],
+  ],
+  [ // My County
+    ["Second Ferris Wheel", "The county fair has TWO Ferris wheels now. Unbeatable."],
+    ["Mega Corn Maze", "It's so big that some people are still in there from last year. They seem happy."],
+    ["Monster Truck Arena", "VROOOOOM. Land values went up because it is so cool."],
+    ["Giant Pumpkin Farm", "Pumpkins the size of cars. You can live inside one. I'm renting them out."],
+    ["County-Wide Water Balloon Fight", "Every summer. Everyone's invited. Land prices: soaked in money."],
+  ],
+  [ // My State
+    ["New State Flag", "The new flag is a lightning bolt wearing sunglasses. Way better than before."],
+    ["Go-Karts at Every Rest Stop", "Every highway rest stop has a go-kart track now. Road trips are actually fun."],
+    ["Official State Snack: Pizza Rolls", "I passed the law myself. Delicious legislation."],
+    ["Mountain Shaped Like a W", "I had a whole mountain carved into a W. Took a while. Worth it."],
+    ["Snow Day Button", "I have a button that cancels school for the whole state. I press it a LOT."],
+  ],
+  [ // My Country
+    ["National Holiday: My Birthday", "Everyone gets the day off and has to eat cake. You're welcome."],
+    ["Waterpark Embassy", "All the world leaders have to meet at the waterpark now. World peace through waterslides."],
+    ["National Anthem Remix", "The anthem has a bass drop now. People actually WANT to stand up for it."],
+    ["Army of Golden Retrievers", "They don't fight. They just make everyone happy. Best defense system ever."],
+    ["Cardboard Space Program", "My rocket is made of cardboard boxes and duct tape. Rocket science is easy, actually."],
+  ],
+  [ // My Continent
+    ["Rename the Continent", "I renamed it after my favorite snack. The map people are updating all the maps."],
+    ["Brick Bridge to Another Continent", "Built it out of toy bricks. Took forever. Holding up surprisingly well."],
+    ["Mega Mall the Size of a Country", "The food court has 10,000 restaurants. I've eaten at 6 so far."],
+    ["Continental Zipline", "Zip from one side to the other in 4 hours. Please wear a helmet."],
+    ["Dino Park (Real Dinosaurs)", "Scientists brought back dinosaurs and I rent them out as pets. What could go wrong?"],
+  ],
+  [ // My Hemisphere
+    ["Equator Fence", "Keeps the two halves of the planet from mixing. Very important. Probably."],
+    ["Northern Lights Show", "I control the northern lights now. Tonight's show: my initials. In rainbow."],
+    ["Hemisphere Group Chat", "Billions of members. Notifications never stop. I muted it."],
+    ["Weather Control Machine", "Sunny every weekend. Snow only on test days, so school gets canceled."],
+    ["30-Minute Pizza Anywhere", "Any address on my half of Earth, 30 minutes or less, or it's free."],
+  ],
+  [ // My Moon
+    ["Moon WiFi", "No signal before. Now: 5 bars. Moon rentals SKYROCKET. (Get it? Rocket?)"],
+    ["Low-Gravity Basketball Court", "Everyone can dunk. EVERYONE. Even my grandma."],
+    ["Cheese Mine", "The moon is NOT made of cheese. So I brought a bunch of cheese. Now it is."],
+    ["Moon Bounce House", "A bounce house on the moon. Bounce too hard and you might leave the moon. Be careful."],
+    ["Earth-View Hot Tub", "Chill in a hot tub while looking at Earth. 10 out of 10 vacation spot."],
+  ],
+  [ // My Planet
+    ["Recycling Program", "A good landlord takes care of the property. Even when the property is a whole planet."],
+    ["Planet-Sized Waterslide", "Starts at the top of a mountain, ends at the beach. The ride takes 3 days."],
+    ["Robot Butlers for Everyone", "They do your chores. They do your homework. They are REALLY good at hide and seek."],
+    ["Volcano Hot Tubs", "Volcanoes turned into giant hot tubs. Perfectly safe. (Probably.)"],
+    ["Rings Like Saturn", "Earth has a ring now. It's made of space rocks and looks awesome. Property value: astronomical."],
+  ],
+  [ // My Solar System
+    ["Pluto Is a Planet Again", "I made Pluto a planet again. Pluto pays double rent because it's so happy."],
+    ["Asteroid Belt Go-Kart Track", "Dodging space rocks at top speed. The ultimate road trip."],
+    ["First Pizza Place on Mars", "Delivery takes 7 months. Still worth it."],
+    ["Sun-Powered Everything", "Free energy forever. The sun works for me now."],
+    ["Jupiter Mega Mall", "Jupiter is huge so the mall is huge. Wear comfy shoes."],
+  ],
+  [ // My Stellar Neighborhood
+    ["Name All the Stars", "I named every star. Most of them are named after me. A few are named Steve."],
+    ["Space Highway Rest Stops", "Every few light-years there's a gas station with snacks. Road trip approved."],
+    ["Space Lemonade Stand", "Lemonade made from glowing space lemons. Tastes like victory."],
+    ["Star Block Party", "The stars came over for a party. It got a little hot in here."],
+    ["Warp Speed Taxi", "Faster-than-light rides for 5 bucks. Please tip your driver."],
+  ],
+  [ // My Galaxy
+    ["Chocolate Milk Way", "It's not the Milky Way anymore. It's the Chocolate Milk Way. Way better."],
+    ["Black Hole Trash Can", "Throw anything in and it's gone forever. Including my homework. Sorry teacher."],
+    ["Galactic Theme Park", "Ride a comet. Spinning teacups made out of moons. Lines are only 400 years long."],
+    ["Spiral Arm Waterslide", "Galaxies are shaped like spirals, so obviously they're waterslides."],
+    ["Alien Tenants", "Aliens pay rent in space gold. They're super polite and have 7 arms each."],
+  ],
+  [ // My Galaxy Group
+    ["Group Chat Admin", "I'm the admin of the galaxy group chat. I can kick anyone. POWER."],
+    ["Galaxy Bowling League", "Black holes for bowling balls, planets for pins. STRIKE!"],
+    ["Intergalactic Sleepover", "All the galaxies brought sleeping bags. Nobody slept."],
+    ["Matching Galaxy Outfits", "All my galaxies wear matching shirts now. Squad goals."],
+    ["Mega Laser Show", "Laser beams across the whole galaxy group. You can see it from everywhere. EPIC."],
+  ],
+  [ // My Supercluster
+    ["Giant Neon Sign", "It says SUPERCLUSTER in neon. You can see it from 100 million light-years away."],
+    ["Wormhole Shortcuts", "Skip across the supercluster in seconds. It's basically a cheat code."],
+    ["Cosmic Food Court", "Space tacos. Nebula noodles. Black hole burgers. I tried them all."],
+    ["Supercluster Olympics", "Galaxies compete in spinning, glowing and being really big."],
+    ["Spacetime Trampoline", "A trampoline made out of spacetime. Bounce hard enough and you land in another galaxy."],
+  ],
+  [ // My Observable Universe
+    ["Bigger Telescope", "The more I can see, the more I own. That's the rule. I made the rule."],
+    ["Universe Billboard", "It just says W. Everyone knows what it means."],
+    ["Light Speed Mail", "Letters arrive at the speed of light. Still slower than texting."],
+    ["Edge of the Universe Gift Shop", "You made it to the edge! Buy a T-shirt."],
+    ["Big Bang Replay", "I replay the Big Bang every New Year's. Best fireworks EVER."],
+  ],
+  [ // My Universe
+    ["Universe Terms of Service", "Everything in the universe agreed to pay me rent. Nobody read the fine print."],
+    ["Dark Matter Storage Units", "Nobody knows what dark matter even is. I'm renting it out anyway."],
+    ["Time Travel Timeshares", "Vacation in any year you want. The dinosaur years are booked solid."],
+    ["Multiverse Mirror", "Look in it and you see other versions of yourself who are also rich."],
+    ["Universe Remote Control", "Pause. Rewind. Fast forward. I fast forward through every Monday."],
+  ],
+  [ // My Dimension
+    ["Portal Doormat", "WELCOME TO MY DIMENSION. Please wipe your feet."],
+    ["Upside-Down Houses", "In this dimension the houses are upside down, and they're worth MORE."],
+    ["4th-Dimension Closet", "Infinite storage. Fits all my stuff AND my sister's stuff."],
+    ["Infinity Pool (Actually Infinite)", "It goes on forever. Nobody has ever found the other side."],
+    ["Ultimate Landlord Crown", "I own everything in every dimension. The final W. GG."],
+  ],
+];
+// Owning this many of a property unlocks its next glow-up
+const GLOWUP_THRESHOLDS = [1, 10, 25, 50, 100];
+
+/* =========================================================
+   BUILD UPGRADE LIST
+   ========================================================= */
+const UPGRADES = [];
+GLOWUPS.forEach((list, ind) => {
+  const base = PROPS[ind].base;
+  list.forEach(([name, desc], k) => {
+    const req = GLOWUP_THRESHOLDS[k];
+    UPGRADES.push({ id:`g_${PROPS[ind].key}_${k}`, type:"glow", ind, req, name, desc,
+      cost: Math.round(base * Math.pow(COST_GROWTH, req) * 10), icon: PROPS[ind].icon });
+  });
+});
+const CLICKS = [
+  ["c0", "Gaming Mouse",                 "It has RGB lights. RGB means more money. Everybody knows that.",              100,    "x2"],
+  ["c1", "Juice Box Power-Up",           "It's apple juice. But I feel SO FAST right now.",                             1000,   "x2"],
+  ["c2", "Finger Push-Ups",              "My clicking finger has abs now. Look at it. LOOK AT IT.",                    25000,  "x2"],
+  ["c3", "Lucky Penny",                  "Found it on the sidewalk, heads up. Every click is luckier now.",            500000, "pct"],
+  ["c4", "Pro Gamer Gloves",             "Fingerless gloves, just like the pros wear. Clicks are now 'professional.'", 5e7,    "pct"],
+  ["c5", "Little Sister Auto-Clicker",   "My little sister clicks for me now. I pay her in gummy bears.",              5e9,    "pct"],
+  ["c6", "Golden Finger",                "I dipped my finger in gold paint. It's permanent now. Worth it.",            5e11,   "pct"],
+  ["c7", "THE ULTIMATE CLICK",           "One click to rule them all. My finger is a legend. Bow to the finger.",      5e13,   "pct"],
+];
+CLICKS.forEach(([id, name, desc, cost, kind]) => {
+  UPGRADES.push({ id, type:"click", kind, name, desc, cost, unlockAt: cost * 0.4, icon: kind === "x2" ? "🖱️" : "👆" });
+});
+const UPG_BY_ID = Object.fromEntries(UPGRADES.map(u => [u.id, u]));
+
+/* =========================================================
+   STATE
+   ========================================================= */
+function freshRun(now){
+  return {
+    dollars: 0, runEarned: 0,
+    owned: PROPS.map(() => 0),
+    upgrades: {},
+    timerHelpers: 0, nerdHelpers: 0,
+    taxes: 0, deadline: now + BASE_TIMER,
+  };
+}
+function newState(){
+  const now = Date.now();
+  return Object.assign(freshRun(now), {
+    version: 2, company: "Big W Real Estate",
+    allTimeEarned: 0, clicks: 0, clickEarned: 0,
+    taxesPaid: 0, refundsCollected: 0, foreclosures: 0, cyclesSurvived: 0,
+    achievements: {}, playTime: 0,
+    startedAt: now, lastTick: now,
+  });
+}
+let S = newState();
+let buyAmt = 1;
+const D = { cps: 0, clickPower: 1, indMult: [], indCps: [], glowups: 0, taxMult: 1, clickPct: 0 };
+
+/* =========================================================
+   DERIVED VALUES
+   ========================================================= */
+function maxTimer(){ return BASE_TIMER + S.timerHelpers * HOUR; }
+function recompute(){
+  const glowIn = PROPS.map(() => 0);
+  let clickX = 1, clickPct = 0, glowups = 0;
+  for (const id in S.upgrades) {
+    const u = UPG_BY_ID[id]; if (!u) continue;
+    if (u.type === "glow") { glowIn[u.ind]++; glowups++; }
+    else if (u.type === "click") { if (u.kind === "x2") clickX *= 2; else clickPct += 0.01; }
+  }
+  let cps = 0;
+  PROPS.forEach((p, i) => {
+    D.indMult[i] = Math.pow(2, glowIn[i]);
+    D.indCps[i] = S.owned[i] * p.cps * D.indMult[i];
+    cps += D.indCps[i];
+  });
+  D.cps = cps;
+  D.glowups = glowups;
+  D.clickPct = clickPct;
+  D.clickPower = clickX + cps * clickPct;
+  D.taxMult = 1 + 0.01 * glowups - 0.01 * S.nerdHelpers;
+}
+function buildingCost(i, n){
+  const b = PROPS[i].base * Math.pow(COST_GROWTH, S.owned[i]);
+  return Math.ceil(b * (Math.pow(COST_GROWTH, n) - 1) / (COST_GROWTH - 1));
+}
+const timerHelpCost = () => Math.ceil(TIMER_HELP.base * Math.pow(TIMER_HELP.growth, S.timerHelpers));
+const nerdHelpCost  = () => Math.ceil(NERD_HELP.base * Math.pow(NERD_HELP.growth, S.nerdHelpers));
+// Firing someone costs double what the last one of that type cost to hire
+const timerFireCost = () => 2 * Math.ceil(TIMER_HELP.base * Math.pow(TIMER_HELP.growth, Math.max(0, S.timerHelpers - 1)));
+const nerdFireCost  = () => 2 * Math.ceil(NERD_HELP.base * Math.pow(NERD_HELP.growth, Math.max(0, S.nerdHelpers - 1)));
+function upgradeUnlocked(u){
+  if (S.upgrades[u.id]) return false;
+  if (u.type === "click") return S.runEarned >= u.unlockAt;
+  return S.owned[u.ind] >= u.req;
+}
+
+/* =========================================================
+   ECONOMY
+   ========================================================= */
+function earn(amount){
+  if (amount <= 0) return;
+  S.dollars += amount; S.runEarned += amount; S.allTimeEarned += amount;
+  S.taxes += amount * BASE_TAX_RATE * D.taxMult; // a negative multiplier means a refund builds up instead
+}
+// Move the game forward to `now`, dealing with any Tax Man visits along the way.
+function advance(now){
+  let guard = 0;
+  while (guard++ < 1000) {
+    const until = Math.min(now, S.deadline);
+    if (until > S.lastTick) earn(D.cps * (until - S.lastTick) / 1000);
+    S.lastTick = Math.max(S.lastTick, until);
+    if (now < S.deadline) break;
+    if (!taxManArrives(S.deadline, now)) break;
+  }
+  S.lastTick = now;
+}
+// Returns true if you survive the visit (no taxes owed), false if you get foreclosed.
+function taxManArrives(at, now){
+  if (S.taxes <= 0) {
+    const refund = -S.taxes;
+    S.dollars += refund; S.refundsCollected += refund; S.taxes = 0;
+    S.deadline = at + maxTimer(); S.cyclesSurvived++;
+    toast(refund > 0 ? `The Tax Man came by and gave YOU a ${money(refund)} refund. LOL.` : "The Tax Man came by. You owed nothing. He left sad.");
+    return true;
+  }
+  foreclose(now);
+  return false;
+}
+function foreclose(now, voluntary){
+  const owed = S.taxes, lost = S.dollars;
+  const keep = { company:S.company, allTimeEarned:S.allTimeEarned, clicks:S.clicks, clickEarned:S.clickEarned,
+    taxesPaid:S.taxesPaid, refundsCollected:S.refundsCollected, foreclosures:S.foreclosures + (voluntary ? 0 : 1),
+    cyclesSurvived:S.cyclesSurvived, startedAt:S.startedAt, version:2,
+    achievements:S.achievements, playTime:S.playTime };
+  S = Object.assign(freshRun(now), keep, { lastTick: now });
+  recompute(); rebuildStore(); rebuildLog(); save();
+  if (voluntary) {
+    showModal("🏚️ You Sold Everything",
+      `<p>You sold all your properties, gave away your <b>${money(lost)}</b>, and told the Tax Man to forget about the <b style="color:var(--red)">${money(Math.max(0, owed))}</b> you owed. He actually said okay!</p>
+       <p>Every property, glow-up and helper is gone. The Tax Man's clock starts over at ${BASE_TIMER / HOUR} hours.</p>
+       <p>You still have your trophies, your play time and your all-time stats. Time for a comeback!</p>`,
+      [["Let's GOOO", hideModal]], true);
+    return;
+  }
+  showModal("🚨 FORECLOSED!!! 🚨",
+    `<p>The Tax Man showed up and you still owed <b style="color:var(--red)">${money(owed)}</b> in property taxes.</p>
+     <p>He took your <b>${money(lost)}</b>. He took every property. He took every glow-up. He even took <b>My Phone</b>.</p>
+     <p>Your helpers ran away. Mom is NOT happy.</p>
+     <p class="note">Foreclosures so far: ${S.foreclosures}. Pay the Tax Man next time, okay?</p>`,
+    [["Start over 😭", hideModal]], true);
+}
+function clickCoin(ev){
+  const amt = D.clickPower;
+  earn(amt); S.clicks++; S.clickEarned += amt; recordClick();
+  const btn = $("coin");
+  btn.classList.remove("pop"); void btn.offsetWidth; btn.classList.add("pop");
+  const r = btn.getBoundingClientRect();
+  const x = ev && ev.clientX ? ev.clientX : r.left + r.width / 2, y = ev && ev.clientY ? ev.clientY : r.top + r.height / 2;
+  floater("+" + money(amt), x - 20 + (Math.random() * 30 - 15), y - 30);
+  render();
+}
+function floater(text, x, y, cls){
+  const f = document.createElement("div");
+  f.className = "floater" + (cls ? " " + cls : ""); f.textContent = text;
+  f.style.left = x + "px"; f.style.top = y + "px";
+  document.body.appendChild(f); setTimeout(() => f.remove(), 1000);
+}
+function buyBuilding(i){
+  const n = buyAmt, cost = buildingCost(i, n);
+  if (S.dollars < cost) return;
+  S.dollars -= cost; S.owned[i] += n;
+  recompute(); rebuildStore(); render();
+}
+function buyUpgrade(id){
+  const u = UPG_BY_ID[id];
+  if (!u || S.upgrades[id] || S.dollars < u.cost) return;
+  S.dollars -= u.cost; S.upgrades[id] = true;
+  if (u.type === "glow") MKT.mood[u.ind] = Math.min(1.5, MKT.mood[u.ind] * 1.15); // a fresh glow-up gets people hyped
+  recompute(); rebuildStore(); rebuildLog(); hideTip(); render();
+  if (u.type === "glow") toast(`✨ Glow-up: “${u.name}”! ${PROPS[u.ind].name} money ×2. (Taxes +1%)`);
+}
+function buyTimerHelper(){
+  const c = timerHelpCost(); if (S.dollars < c) return;
+  S.dollars -= c; S.timerHelpers++; S.deadline += HOUR;
+  toast("The Tax Extension Guy filled out a 'Can I Have More Time Pls' form. +1 hour!");
+  render(); refreshTip();
+}
+function buyNerdHelper(){
+  const c = nerdHelpCost(); if (S.dollars < c) return;
+  S.dollars -= c; S.nerdHelpers++; recompute();
+  if (D.taxMult < 0 && D.taxMult > -0.011) toast("Taxes are NEGATIVE now. The government pays YOU. Big brain moment.");
+  render(); refreshTip();
+}
+function fireTimerHelper(){
+  const c = timerFireCost(); if (S.timerHelpers < 1 || S.dollars < c) return;
+  S.dollars -= c; S.timerHelpers--;
+  S.deadline = Math.max(Date.now() + 60000, S.deadline - HOUR); // never fire your way into an instant foreclosure
+  toast(`Fired a Tax Extension Guy. Paid him ${money(c)} to leave. −1 hour.`, true);
+  render(); refreshTip();
+}
+function fireNerdHelper(){
+  const c = nerdFireCost(); if (S.nerdHelpers < 1 || S.dollars < c) return;
+  S.dollars -= c; S.nerdHelpers--; recompute();
+  toast(`Fired a Math Nerd. Paid him ${money(c)} to leave. Taxes +1%.`, true);
+  render(); refreshTip();
+}
+function payTaxes(){
+  const now = Date.now(); advance(now);
+  if (S.taxes > 0) {
+    if (S.dollars < S.taxes) return;
+    S.dollars -= S.taxes; S.taxesPaid += S.taxes;
+    toast(`Paid the Tax Man ${money(S.taxes)}. He said 'thank you young man.' The clock starts over!`);
+  } else {
+    const refund = -S.taxes; S.dollars += refund; S.refundsCollected += refund;
+    toast(refund > 0 ? `Collected a ${money(refund)} tax refund. FREE MONEY!` : "Told the Tax Man we're all good. He gave a thumbs up.");
+  }
+  S.taxes = 0; S.deadline = now + maxTimer(); S.cyclesSurvived++;
+  render();
+}
+
+/* =========================================================
+   DOM / RENDER
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const bldEls = [];
+function buildBuildingRows(){
+  const wrap = $("buildings"); wrap.innerHTML = "";
+  PROPS.forEach((p, i) => {
+    const b = document.createElement("button");
+    b.className = "bld"; b.dataset.tt = "bld:" + i;
+    b.innerHTML = `<div class="bTop"><span class="ic"></span><div class="info"><div class="nm"></div><div class="sec"></div></div><span class="tkr">${TICKERS[i]}</span></div>
+      <div class="bBot"><span class="own"></span><span class="rate"></span><span class="cost"></span></div>`;
+    b.addEventListener("click", () => { if (!b.classList.contains("mystery")) { buyBuilding(i); refreshTip(); } });
+    wrap.appendChild(b);
+    bldEls.push({ el:b, nm:b.querySelector(".nm"), sec:b.querySelector(".sec"), cost:b.querySelector(".cost"), own:b.querySelector(".own"),
+      rate:b.querySelector(".rate"), ic:b.querySelector(".ic") });
+  });
+}
+let lastUpgKey = "", showAllUpgrades = false;
+const UPG_PREVIEW = 6; // the cheapest few are shown; the rest are behind "Show all"
+function upgradeTag(u){
+  if (u.type === "glow") return "Glow-Up · " + PROPS[u.ind].name + " ×2";
+  return u.kind === "x2" ? "Clicking · click power ×2" : "Clicking · +1% of your income per click";
+}
+function rebuildStore(){
+  const avail = UPGRADES.filter(upgradeUnlocked).sort((a, b) => a.cost - b.cost);
+  const key = avail.map(u => u.id).join(",") + "|" + showAllUpgrades;
+  if (key === lastUpgKey) return;
+  lastUpgKey = key;
+  $("upgCount").textContent = avail.length ? avail.length + " available!" : "";
+  const wrap = $("upgrades"); wrap.innerHTML = "";
+  if (!avail.length) { wrap.innerHTML = `<div class="empty">No glow-ups yet. Buy properties to unlock them!</div>`; return; }
+  const shown = showAllUpgrades ? avail : avail.slice(0, UPG_PREVIEW);
+  shown.forEach(u => {
+    const b = document.createElement("button");
+    b.className = "upg " + u.type; b.dataset.tt = "upg:" + u.id; b.dataset.id = u.id;
+    b.innerHTML = `<span class="uIc">${u.icon}</span><span class="uNm">${esc(u.name)}</span><span class="uCost">${money(u.cost)}</span><span class="uTag">${esc(upgradeTag(u))}</span>`;
+    b.addEventListener("click", () => buyUpgrade(u.id));
+    wrap.appendChild(b);
+  });
+  if (avail.length > UPG_PREVIEW) {
+    const more = document.createElement("button");
+    more.className = "upgMore";
+    more.textContent = showAllUpgrades ? "Show fewer" : `Show all ${avail.length} upgrades`;
+    more.addEventListener("click", () => { showAllUpgrades = !showAllUpgrades; rebuildStore(); render(); });
+    wrap.appendChild(more);
+  }
+}
+function rebuildLog(){
+  const owned = UPGRADES.filter(u => S.upgrades[u.id]);
+  const el = $("glowLog");
+  if (!owned.length) { el.innerHTML = `<div class="empty">You haven't bought any upgrades yet. Your properties are kinda plain right now ngl.</div>`; return; }
+  el.innerHTML = `<div class="note" style="margin-top:0">${owned.length} upgrade${owned.length > 1 ? "s" : ""} bought. Click one to read about it.</div>` +
+    owned.map(u => `<details><summary>${u.icon} ${esc(u.name)}<span class="sec">${esc(u.type === "glow" ? PROPS[u.ind].name : "Clicking")}</span></summary><p>${esc(u.desc)}</p></details>`).join("");
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c])); }
+
+function render(){
+  const now = Date.now();
+  $("dollars").textContent = money(S.dollars);
+  $("cps").textContent = "per second: " + money(D.cps);
+  $("clickInfo").textContent = "+" + money(D.clickPower) + " per click";
+
+  // The Tax Man panel
+  const left = S.deadline - now, refund = S.taxes < 0;
+  const urgent = !refund && S.taxes > 0 && left < HOUR;
+  const tax = $("tax");
+  tax.classList.toggle("refund", refund || (S.taxes === 0 && D.taxMult < 0));
+  tax.classList.toggle("urgent", urgent);
+  $("taxHead").textContent = refund ? "😎 THE GOVERNMENT OWES YOU MONEY 😎" : "😱 THE TAX MAN IS COMING 😱";
+  $("taxLabel").textContent = refund ? "TAX REFUND FOR YOU" : "PROPERTY TAXES OWED";
+  $("taxAmt").textContent = money(Math.abs(S.taxes));
+  $("timerLabel").firstChild.textContent = refund ? "PAYDAY IN" : "HE GETS HERE IN";
+  $("taxTimer").textContent = fmtTime(left);
+  $("taxBar").style.width = Math.max(0, Math.min(100, left / maxTimer() * 100)) + "%";
+  const pct = (D.taxMult * 100).toFixed(0);
+  $("taxInfo").innerHTML =
+    `Taxes are ${(BASE_TAX_RATE * 100).toFixed(0)}% of everything you earn × <b>${pct}%</b> ` +
+    `(+${D.glowups}% glow-ups, −${S.nerdHelpers}% math nerds)<br>` +
+    `${refund || D.taxMult < 0 ? "Refund growing by" : "Piling up"}: <b>${money(Math.abs(D.cps * BASE_TAX_RATE * D.taxMult))}/s</b> · He visits every ${maxTimer() / HOUR}h`;
+  const pay = $("payBtn");
+  if (S.taxes > 0) {
+    pay.disabled = S.dollars < S.taxes;
+    pay.textContent = pay.disabled ? `NEED ${money(S.taxes - S.dollars)} MORE 😬` : `PAY THE TAX MAN ${money(S.taxes)}`;
+  } else {
+    pay.disabled = false;
+    pay.textContent = refund ? `COLLECT ${money(-S.taxes)} REFUND 🤑` : "TELL THE TAX MAN WE'RE GOOD 👍";
+  }
+  document.body.classList.toggle("danger", urgent);
+  document.title = urgent ? `😱 ${fmtTime(left)} TAX MAN IS COMING 😱` : `${money(S.dollars)} · Coin Clicker`;
+
+  // Helpers
+  const tc = timerHelpCost(), nc = nerdHelpCost();
+  $("timerHelpN").textContent = S.timerHelpers; $("timerHelpC").textContent = money(tc);
+  $("timerHelpBtn").classList.toggle("cant", S.dollars < tc);
+  $("nerdHelpN").textContent = S.nerdHelpers; $("nerdHelpC").textContent = money(nc);
+  $("nerdHelpBtn").classList.toggle("cant", S.dollars < nc);
+  const tf = timerFireCost(), nf = nerdFireCost();
+  $("timerFireC").textContent = S.timerHelpers ? money(tf) : "nobody hired";
+  $("timerFireBtn").disabled = !S.timerHelpers || S.dollars < tf;
+  $("nerdFireC").textContent = S.nerdHelpers ? money(nf) : "nobody hired";
+  $("nerdFireBtn").disabled = !S.nerdHelpers || S.dollars < nf;
+
+  // Properties: the ones you've found, plus one "secret property" teaser for the next one
+  let shownSecret = false;
+  PROPS.forEach((p, i) => {
+    const e = bldEls[i];
+    const revealed = S.owned[i] > 0 || i === 0 || S.runEarned >= p.base * 0.5 || S.owned[i - 1] > 0;
+    if (revealed) {
+      e.el.style.display = ""; e.el.classList.remove("mystery");
+      e.ic.textContent = S.owned[i] ? p.icon : "🔒"; e.nm.textContent = p.name; e.sec.textContent = p.sector;
+      const c = buildingCost(i, buyAmt);
+      e.cost.textContent = `Buy ×${buyAmt} · ${money(c)}`;
+      e.own.textContent = "Own " + fmt(S.owned[i]);
+      e.rate.textContent = S.owned[i] ? money(D.indCps[i]) + "/s" : "Locked! Buy one to unlock";
+      e.el.classList.toggle("cant", S.dollars < c);
+    } else if (!shownSecret) {
+      shownSecret = true;
+      e.el.style.display = ""; e.el.classList.add("mystery"); e.el.classList.remove("cant");
+      e.ic.textContent = "❓"; e.nm.textContent = "??? Secret Property ???"; e.sec.textContent = "Top secret!! No peeking";
+      e.rate.textContent = `Shows up when you earn ${money(p.base * 0.5)}`;
+    } else e.el.style.display = "none";
+  });
+
+  document.querySelectorAll("#upgrades .upg").forEach(b => {
+    const u = UPG_BY_ID[b.dataset.id]; b.classList.toggle("cant", S.dollars < u.cost);
+  });
+}
+function renderStats(){
+  const rows = [
+    ["Company", esc(S.company)],
+    ["Money right now", money(S.dollars)],
+    ["Earned this run", money(S.runEarned)],
+    ["Earned all time", money(S.allTimeEarned)],
+    ["Money per second", money(D.cps)],
+    ["Coin clicks", fmt(S.clicks)],
+    ["Money from clicking", money(S.clickEarned)],
+    ["Properties owned", fmt(S.owned.reduce((a, b) => a + b, 0))],
+    ["Upgrades bought", `${Object.keys(S.upgrades).length} / ${UPGRADES.length}`],
+    ["Glow-ups", `${D.glowups} / ${UPGRADES.filter(u => u.type === "glow").length}`],
+    ["Tax multiplier", (D.taxMult * 100).toFixed(0) + "%"],
+    ["Tax Extension Guys", S.timerHelpers],
+    ["Math Nerds", S.nerdHelpers],
+    ["Taxes paid (all time)", money(S.taxesPaid)],
+    ["Refunds collected", money(S.refundsCollected)],
+    ["Tax Man visits survived", S.cyclesSurvived],
+    ["Times foreclosed", S.foreclosures],
+    ["Trophies", `${Object.keys(S.achievements).length} / ${ACH.length}`],
+    ["Play time", fmtDuration(S.playTime * 1000)],
+    ["Playing since", new Date(S.startedAt).toLocaleString()],
+  ];
+  $("stats").innerHTML = rows.map(([a, b]) => `<div><span>${a}</span><span>${b}</span></div>`).join("");
+}
+
+/* =========================================================
+   TOOLTIP
+   ========================================================= */
+const tip = $("tip"); let tipKey = null, tipX = 0, tipY = 0;
+function tipHTML(key){
+  const [kind, id] = key.split(":");
+  if (kind === "bld") {
+    const i = +id, p = PROPS[i];
+    if (bldEls[i].el.classList.contains("mystery")) return `<div class="tn">❓ Secret Property</div><div class="td">Something AWESOME is coming. Earn ${money(p.base * 0.5)} this run to find out what it is.</div>`;
+    const each = p.cps * D.indMult[i], share = D.cps ? D.indCps[i] / D.cps * 100 : 0;
+    return `<div class="tn">${p.icon} ${esc(p.name)}</div><div class="ts">${esc(p.sector)}</div>
+      <div class="td">${esc(p.flavor)}</div>
+      <div>Each one makes <b>${money(each)}/s</b> (base ${money(p.cps)} × ${fmt(D.indMult[i])})</div>
+      <div>${S.owned[i]} owned making <b>${money(D.indCps[i])}/s</b> (${share.toFixed(1)}% of your money)</div>
+      <div class="tc">Cost: ${money(buildingCost(i, buyAmt))}${buyAmt > 1 ? " for " + buyAmt : ""}</div>`;
+  }
+  if (kind === "upg") {
+    const u = UPG_BY_ID[id]; if (!u) return "";
+    let sec, bonus, pen = "";
+    if (u.type === "glow") {
+      sec = PROPS[u.ind].sector + " · Glow-Up";
+      bonus = `${esc(PROPS[u.ind].name)} makes ×2 money`;
+      pen = `<div class="tp">Catch: property taxes +1% (fancier stuff = more taxes)</div>`;
+    } else {
+      sec = "Clicking"; bonus = u.kind === "x2" ? "Click power ×2" : "Every click also earns +1% of your money per second";
+    }
+    return `<div class="tn">${u.icon} ${esc(u.name)}</div><div class="ts">${esc(sec)}</div><div class="td">${esc(u.desc)}</div>
+      <div class="tb">Bonus: ${bonus}</div>${pen}<div class="tc">Cost: ${money(u.cost)}</div>`;
+  }
+  if (kind === "fire") {
+    const timer = id === "timer", n = timer ? S.timerHelpers : S.nerdHelpers;
+    return `<div class="tn">🔥 Fire a ${timer ? "Tax Extension Guy" : "Math Nerd"}</div>
+      <div class="td">Firing people is super awkward. You have to pay them a goodbye bonus so they leave nicely.</div>
+      <div class="tp">${timer ? "−1 hour off the Tax Man's timer and the countdown (always leaves at least 1 minute)" : "+1% property taxes"}</div>
+      <div>Hired: ${n}</div>
+      <div class="tc">${n ? "Goodbye bonus: " + money(timer ? timerFireCost() : nerdFireCost()) + " (2× what the last one cost)" : "Nobody to fire"}</div>`;
+  }
+  if (kind === "help") {
+    if (id === "timer") return `<div class="tn">⏳ Tax Extension Guy</div><div class="td">He fills out a form called 'Can I Have More Time Pls.' It works every single time.</div>
+      <div class="tb">+1 hour on the Tax Man's timer (the current countdown gets +1 hour too)</div>
+      <div>Hired: ${S.timerHelpers} · Tax Man visits every ${maxTimer() / HOUR}h</div><div class="tc">Cost: ${money(timerHelpCost())}</div>`;
+    return `<div class="tn">🤓 Math Nerd Accountant</div><div class="td">He found a loophole on page 4,000 of the tax rules. Nobody else has ever read page 4,000.</div>
+      <div class="tb">−1% property taxes. Under 0%, the government starts paying YOU.</div>
+      <div>Hired: ${S.nerdHelpers} · Tax multiplier now: ${(D.taxMult * 100).toFixed(0)}%</div><div class="tc">Cost: ${money(nerdHelpCost())}</div>`;
+  }
+  if (kind === "ach") {
+    const a = ACH_BY_ID[id]; if (!a) return "";
+    const when = S.achievements[id];
+    return `<div class="tn">${when ? a.icon : "🔒"} ${esc(a.name)}</div><div class="ts">${esc(a.cat)}</div>
+      <div class="td">${esc(a.desc)}</div>
+      ${when ? `<div class="tb">Unlocked ${new Date(when).toLocaleString()}</div>` : `<div style="color:var(--muted)">Locked</div>`}`;
+  }
+  if (kind === "mkt") {
+    const i = +id, p = PROPS[i], h = MKT.ind[i], m = MKT.mood[i];
+    const c = pctChange(h);
+    const moodTxt = m > 1.04 ? "HYPED 🔥" : m < 0.96 ? "Kinda meh 😐" : "Normal";
+    return `<div class="tn">${p.icon} ${TICKERS[i]} · ${esc(p.name)}</div><div class="ts">${esc(p.sector)}</div>
+      <div>Price: <b>${money(h[h.length - 1] || 0)}</b></div>
+      <div>Real money: <b>${money(D.indCps[i])}/s</b></div>
+      <div>Hype level: <b>${moodTxt}</b> (${(m * 100).toFixed(0)}%)</div>
+      <div>3-minute change: <b>${c === null ? "n/a" : (c >= 0 ? "▲ +" : "▼ ") + c.toFixed(1) + "%"}</b></div>
+      <div class="td">The price follows how much this property makes per second. Buying a glow-up gets people hyped for a minute or two.</div>`;
+  }
+  return "";
+}
+let touchMode = false; // set from the last pointer type, so laptops with touchscreens work both ways
+document.addEventListener("pointerdown", e => { touchMode = e.pointerType === "touch"; }, true);
+function placeTip(){
+  tip.classList.toggle("docked", touchMode);
+  if (touchMode) return; // CSS pins it to the bottom
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = tipX - w - 16, y = tipY - 10;
+  if (x < 8) x = tipX + 18;
+  if (y + h > innerHeight - 8) y = innerHeight - h - 8;
+  tip.style.left = x + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+function refreshTip(){ if (tipKey) { tip.innerHTML = tipHTML(tipKey); placeTip(); } }
+function hideTip(){ tipKey = null; tip.style.display = "none"; }
+document.addEventListener("mouseover", e => {
+  const t = e.target.closest("[data-tt]");
+  if (!t) { hideTip(); return; }
+  if (touchMode) {
+    const r = t.getBoundingClientRect();
+    tip.classList.toggle("top", r.top + r.height / 2 > innerHeight / 2);
+  }
+  if (t.dataset.tt !== tipKey) { tipKey = t.dataset.tt; tip.style.display = "block"; refreshTip(); }
+});
+document.addEventListener("mousemove", e => { tipX = e.clientX; tipY = e.clientY; if (tipKey && !touchMode) placeTip(); });
+
+/* =========================================================
+   MODAL / TOAST
+   ========================================================= */
+function showModal(title, html, buttons, bad){
+  const m = $("modal");
+  m.className = bad ? "bad" : "";
+  m.innerHTML = `<h3>${title}</h3><div>${html}</div><div class="row"></div>`;
+  const row = m.querySelector(".row");
+  buttons.forEach(([label, fn, cls]) => {
+    const b = document.createElement("button"); b.className = "btn " + (cls || ""); b.textContent = label;
+    b.addEventListener("click", fn); row.appendChild(b);
+  });
+  $("modalBg").style.display = "flex";
+}
+function hideModal(){ $("modalBg").style.display = "none"; }
+function toast(msg, bad){
+  const t = document.createElement("div"); t.className = "toast" + (bad === "gold" ? " gold" : bad ? " bad" : ""); t.textContent = msg;
+  $("toasts").appendChild(t);
+  setTimeout(() => { t.style.transition = "opacity .5s"; t.style.opacity = 0; setTimeout(() => t.remove(), 500); }, 5000);
+  while ($("toasts").children.length > 5) $("toasts").firstChild.remove();
+}
+
+/* =========================================================
+   SAVE / LOAD
+   ========================================================= */
+function encodeSave(){ return btoa(unescape(encodeURIComponent(JSON.stringify(S)))); }
+function decodeSave(str){ return JSON.parse(decodeURIComponent(escape(atob(str.trim())))); }
+function sanitize(o){
+  const base = newState();
+  if (!o || typeof o !== "object") throw new Error("Not a save");
+  for (const k in base) if (k in o && typeof o[k] === typeof base[k]) base[k] = o[k];
+  base.owned = PROPS.map((_, i) => Math.max(0, Math.floor(+((o.owned || [])[i]) || 0)));
+  base.upgrades = {};
+  for (const id in (o.upgrades || {})) if (UPG_BY_ID[id]) base.upgrades[id] = true;
+  base.achievements = {};
+  for (const id in (o.achievements || {})) if (ACH_BY_ID[id] && isFinite(o.achievements[id])) base.achievements[id] = +o.achievements[id];
+  if (!isFinite(base.playTime) || base.playTime < 0) base.playTime = 0;
+  for (const k of ["dollars","runEarned","allTimeEarned","taxes","deadline","lastTick"]) if (!isFinite(base[k])) throw new Error("Broken save");
+  return base;
+}
+let canSave = true;
+function save(){
+  if (!canSave) return;
+  try { localStorage.setItem(SAVE_KEY, encodeSave()); $("saveNote").textContent = "Saved at " + new Date().toLocaleTimeString() + ". Saves every 30 seconds."; }
+  catch (e) { $("saveNote").textContent = "Couldn't save: " + e.message; }
+}
+function applyLoaded(obj, isImport){
+  S = sanitize(obj);
+  recompute();
+  const now = Date.now(), away = now - S.lastTick;
+  // Properties only earn for up to 24 hours while you're gone. The Tax Man's clock still runs the whole time.
+  const capped = away > MAX_AWAY;
+  if (capped) S.lastTick = now - MAX_AWAY;
+  const before = S.dollars, taxesBefore = S.taxes, foreclosedBefore = S.foreclosures;
+  advance(now);
+  recompute(); rebuildStore(); rebuildLog(); $("companyName").value = S.company; render();
+  if (S.foreclosures === foreclosedBefore && away > 60000 && !isImport) {
+    showModal("👋 Welcome back!",
+      `<p>You were gone for <b>${fmtDuration(away)}</b>.</p>
+       <p>Your properties made <b style="color:var(--lime)">${money(S.dollars - before)}</b> while you were away!</p>
+       ${capped ? `<p class="note">(Properties only earn for up to 24 hours while you're gone.)</p>` : ""}
+       <p>Your taxes went up by <b style="color:var(--red)">${money(S.taxes - taxesBefore)}</b>. The Tax Man gets here in <b>${fmtTime(S.deadline - now)}</b>.</p>`,
+      [["Back to business 😎", hideModal]]);
+  }
+}
+function load(){
+  let raw = null, old = null;
+  try { raw = localStorage.getItem(SAVE_KEY); old = localStorage.getItem(OLD_SAVE_KEY); }
+  catch (e) { canSave = false; toast("This browser won't let the game save here. Use Export in the Save tab to keep your progress.", true); return; }
+  if (raw) {
+    try { applyLoaded(decodeSave(raw), false); }
+    catch (e) { console.error(e); toast("Couldn't read your save, so you're starting fresh.", true); }
+    return;
+  }
+  if (old) { // bring over money and properties from the simple version of the game
+    try {
+      const o = JSON.parse(old), st = newState();
+      st.dollars = st.runEarned = st.allTimeEarned = Math.max(0, +o.money || 0);
+      st.owned = Array.isArray(o.owned) ? o.owned : [o.phones || 0];
+      if (o.lastTick) st.lastTick = o.lastTick;
+      applyLoaded(st, false);
+      toast("Found your old Coin Clicker save! Your money and properties came with you. 🎉", "gold");
+    } catch (e) { console.error(e); }
+  }
+}
+function exportSave(){
+  save();
+  showModal("📤 Export save", `<p class="note" style="margin-top:0">Copy this and keep it somewhere safe. Like a secret code.</p><textarea id="exportTxt" readonly>${encodeSave()}</textarea>`,
+    [["Copy", () => { const t = $("exportTxt"); t.select(); navigator.clipboard ? navigator.clipboard.writeText(t.value).then(() => toast("Copied!")) : document.execCommand("copy"); }],
+     ["Close", hideModal]]);
+}
+function importSave(){
+  showModal("📥 Import save", `<p class="note" style="margin-top:0">Paste your secret save code. This replaces your current game!</p><textarea id="importTxt" placeholder="Paste save here..."></textarea>`,
+    [["Load", () => {
+        try { applyLoaded(decodeSave($("importTxt").value), true); resetMarket(); lastAchKey = ""; checkAchievements(true); save(); hideModal(); toast("Save loaded!"); }
+        catch (e) { toast("That save code doesn't work. Did you copy all of it?", true); }
+      }],
+     ["Cancel", hideModal]]);
+}
+function startOver(){
+  showModal("🏚️ Sell everything?",
+    `<p>You lose all your money, every property, every upgrade and every helper. Your taxes get wiped and the Tax Man's clock starts over at ${BASE_TIMER / HOUR} hours.</p>
+     <p>You keep your trophies, play time and all-time stats. You can't undo this!</p>`,
+    [["Sell it all", () => { hideModal(); foreclose(Date.now(), true); }, "danger"],
+     ["Nope", hideModal]], true);
+}
+function hardReset(){
+  showModal("🔥 Delete EVERYTHING?", `<p>This deletes everything. Money, properties, upgrades, helpers, trophies, stats. ALL OF IT. You can't undo this!</p>`,
+    [["Delete it all", () => { S = newState(); $("companyName").value = S.company; recompute(); rebuildStore(); rebuildLog(); resetMarket(); lastAchKey = ""; checkAchievements(true); renderAchievements(); save(); render(); hideModal(); toast("Brand new start. The Tax Man forgot all about you."); }, "danger"],
+     ["Nope", hideModal]], true);
+}
+
+/* =========================================================
+   NEWS TICKER
+   ========================================================= */
+const NEWS = [
+  "Local kid becomes a landlord. Mom asks him to clean his room first.",
+  "Scientists confirm: clicking a giant coin is the best way to get rich.",
+  "Little sister demands a cut of the profits. Request DENIED.",
+  "Neighbor's cat tries to pay rent in dead mice. Payment refused.",
+  "Grown-up real estate agent asks a 12-year-old for advice. Gets it.",
+  "Teacher assigns essay 'What I Did This Summer.' Kid writes 'bought a planet.'",
+  "Housing market report: everything is AWESOME.",
+  "Local dog barks at the Tax Man. Good boy.",
+  "Pizza delivery guy gets lost in your empire. Again.",
+  "Rumor: the coin has a W on it because it stands for WINNING.",
+  "Grandma brags about you at bingo night. Again.",
+  "Experts say owning the moon is 'a lot.' Experts are just jealous.",
+  "Homework: not done. Real estate empire: thriving.",
+  "New study: 10 out of 10 renters prefer landlords with RGB lights.",
+  "Your best friend asks to borrow 5 bucks. You give him a street instead.",
+  "Weather forecast: 100% chance of money.",
+  "School nurse says clicking 10,000 times is 'not a sport.' We disagree.",
+  "Your bedtime has been moved to 'whenever the Tax Man is paid.'",
+];
+function newsLine(){
+  const left = S.deadline - Date.now();
+  if (S.taxes > 0 && left < HOUR) return "BREAKING: The Tax Man was spotted at the end of your street!! PAY YOUR TAXES!!!";
+  if (S.taxes > 0 && S.dollars < S.taxes && Math.random() < 0.4) return "Your taxes are bigger than your money right now. Your Math Nerd is sweating. You're sweating.";
+  if (D.taxMult < 0 && Math.random() < 0.4) return "The government mailed you a refund check with a sticky note that says 'u r cool.'";
+  if (S.foreclosures > 0 && Math.random() < 0.15) return `Comeback alert: this is your empire's round ${S.foreclosures + 1}. Comebacks are the best.`;
+  if (D.glowups > 0 && Math.random() < 0.3) {
+    const owned = UPGRADES.filter(u => u.type === "glow" && S.upgrades[u.id]);
+    const u = owned[Math.floor(Math.random() * owned.length)];
+    return `The neighbors are SO jealous of your "${u.name}."`;
+  }
+  return NEWS[Math.floor(Math.random() * NEWS.length)];
+}
+function rotateNews(){
+  const t = $("ticker"); t.style.opacity = 0;
+  setTimeout(() => { $("tickerText").textContent = newsLine(); t.style.opacity = 1; }, 400);
+}
+
+/* =========================================================
+   HOUSING MARKET CHARTS
+   Each property's price = what it makes per second x hype.
+   Hype wanders randomly between 65% and 150% and drifts back to 100%; glow-ups bump it 15%.
+   History is only kept while the page is open (one sample a second, last 3 minutes).
+   ========================================================= */
+const MKT_LEN = 180;
+const MKT = { idx: [], ind: PROPS.map(() => []), mood: PROPS.map(() => 1), hover: -1 };
+const UP = "#7CFC7C", DOWN = "#ff5c8a";
+const SHORT = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"];
+function fmtShort(n){
+  if (!isFinite(n) || n <= 0) return "$0";
+  if (n < 1000) return "$" + (n < 10 ? n.toFixed(2) : n < 100 ? n.toFixed(1) : n.toFixed(0));
+  const k = Math.floor(Math.log10(n) / 3);
+  if (k >= SHORT.length) return "$" + n.toExponential(2);
+  const v = n / Math.pow(1000, k);
+  return "$" + (v < 10 ? v.toFixed(2) : v < 100 ? v.toFixed(1) : v.toFixed(0)) + SHORT[k];
+}
+function pctChange(h){
+  const first = h.find(v => v > 0), last = h[h.length - 1];
+  if (!first || !last) return null;
+  return (last / first - 1) * 100;
+}
+function resetMarket(){
+  MKT.idx.length = 0; MKT.ind.forEach(h => h.length = 0); MKT.mood.fill(1);
+  for (let k = 0; k < 60; k++) sampleMarket();
+  lastTickerKey = null; drawMarket();
+}
+function pushCap(arr, v){ arr.push(v); if (arr.length > MKT_LEN) arr.shift(); }
+function sampleMarket(){
+  let total = 0;
+  PROPS.forEach((_, i) => {
+    let m = MKT.mood[i];
+    m += (1 - m) * 0.06 + (Math.random() - 0.5) * 0.05;
+    m = Math.min(1.5, Math.max(0.65, m));
+    MKT.mood[i] = m;
+    const v = (D.indCps[i] || 0) * m;
+    pushCap(MKT.ind[i], v); total += v;
+  });
+  pushCap(MKT.idx, total);
+}
+function drawChart(cv, data, big){
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const padR = big ? 58 : 5, padT = big ? 10 : 5, padB = big ? 8 : 5;
+  const plotW = w - padR, plotH = h - padT - padB;
+  const live = data.filter(v => v > 0);
+  if (data.length < 2 || !live.length) {
+    ctx.strokeStyle = "rgba(255,255,255,.15)"; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(plotW, h / 2); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#9fb0e0"; ctx.font = (big ? 13 : 11) + "px 'Comic Sans MS', sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(big ? "The market opens when you buy your first property!" : "Not listed", plotW / 2, h / 2 - 6);
+    return;
+  }
+  const start = data.findIndex(v => v > 0);
+  const shown = data.slice(start);
+  let lo = Math.min(...shown), hi = Math.max(...shown);
+  if (hi === lo) { hi = hi * 1.05 + 1e-9; lo = lo * 0.95; }
+  const span = hi - lo; hi += span * 0.08; lo = Math.max(0, lo - span * 0.08);
+  const X = i => (i + MKT_LEN - data.length) / (MKT_LEN - 1) * plotW; // newest sample at the right edge
+  const Y = v => padT + (1 - (v - lo) / (hi - lo)) * plotH;
+  const color = data[data.length - 1] >= (live[0] || 0) ? UP : DOWN;
+
+  if (big) {
+    ctx.font = "11px Consolas, monospace"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    for (let g = 0; g <= 3; g++) {
+      const v = lo + (hi - lo) * (g / 3), y = Y(v);
+      ctx.strokeStyle = "rgba(255,255,255,.06)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, Math.round(y) + 0.5); ctx.lineTo(plotW, Math.round(y) + 0.5); ctx.stroke();
+      ctx.fillStyle = "#9fb0e0"; ctx.fillText(fmtShort(v), plotW + 6, y);
+    }
+  }
+  ctx.beginPath();
+  for (let i = start; i < data.length; i++) { const x = X(i), y = Y(data[i]); i > start ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+  ctx.lineWidth = big ? 3 : 2; ctx.lineJoin = "round"; ctx.strokeStyle = color; ctx.stroke();
+  ctx.lineTo(X(data.length - 1), padT + plotH); ctx.lineTo(X(start), padT + plotH); ctx.closePath();
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+  grad.addColorStop(0, color + "40"); grad.addColorStop(1, color + "00");
+  ctx.fillStyle = grad; ctx.fill();
+  const lx = X(data.length - 1), ly = Y(data[data.length - 1]);
+  ctx.beginPath(); ctx.arc(lx, ly, big ? 4 : 3, 0, Math.PI * 2);
+  ctx.fillStyle = color; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = "#0a1028"; ctx.stroke();
+
+  if (big && MKT.hover >= start && MKT.hover < data.length) {
+    const i = MKT.hover, x = X(i), y = Y(data[i]);
+    ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(Math.round(x) + 0.5, padT); ctx.lineTo(Math.round(x) + 0.5, padT + plotH); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = "#0a1028"; ctx.lineWidth = 2; ctx.stroke();
+    const ago = data.length - 1 - i;
+    const label = `${money(data[i])}/s · ${ago ? ago + "s ago" : "now"}`;
+    ctx.font = "bold 12px 'Comic Sans MS', sans-serif"; ctx.textBaseline = "middle";
+    const tw = ctx.measureText(label).width + 14;
+    let bx = x + 10; if (bx + tw > plotW) bx = x - 10 - tw;
+    ctx.fillStyle = "rgba(11,17,48,.95)"; ctx.strokeStyle = "#4fd8ff"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, padT + 2, tw, 22, 6) : ctx.rect(bx, padT + 2, tw, 22); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#fff7d1"; ctx.textAlign = "left"; ctx.fillText(label, bx + 7, padT + 13);
+  }
+}
+const tkEls = [];
+let lastTickerKey = null;
+function rebuildTickers(){
+  const listed = PROPS.map((_, i) => i).filter(i => S.owned[i] > 0);
+  const key = listed.join(",");
+  if (key === lastTickerKey) return;
+  lastTickerKey = key;
+  const wrap = $("tickers"); wrap.innerHTML = ""; tkEls.length = 0;
+  if (!listed.length) { wrap.innerHTML = `<div class="empty">Nothing on the market yet. Buy a property to list it!</div>`; return; }
+  listed.forEach(i => {
+    const d = document.createElement("div");
+    d.className = "tk"; d.dataset.tt = "mkt:" + i;
+    d.innerHTML = `<div class="tkTop"><span class="tkSym">${PROPS[i].icon} ${TICKERS[i]}</span><span class="tkPx"></span></div><div class="chg"></div><canvas></canvas>`;
+    wrap.appendChild(d);
+    tkEls.push({ i, px:d.querySelector(".tkPx"), chg:d.querySelector(".chg"), cv:d.querySelector("canvas") });
+  });
+}
+function setChange(el, h){
+  const c = pctChange(h);
+  el.classList.toggle("up", c !== null && c >= 0); el.classList.toggle("down", c !== null && c < 0);
+  el.textContent = c === null ? "—" : (c >= 0 ? "▲ +" : "▼ ") + c.toFixed(2) + "% (3m)";
+}
+function drawMarket(){
+  rebuildTickers();
+  const idx = MKT.idx;
+  $("idxPx").textContent = money(idx[idx.length - 1] || 0) + "/s";
+  setChange($("idxChg"), idx);
+  drawChart($("idxChart"), idx, true);
+  tkEls.forEach(t => {
+    const h = MKT.ind[t.i];
+    t.px.textContent = fmtShort(h[h.length - 1] || 0);
+    setChange(t.chg, h);
+    drawChart(t.cv, h, false);
+  });
+}
+$("idxChart").addEventListener("mousemove", e => {
+  const r = e.currentTarget.getBoundingClientRect(), plotW = r.width - 58, n = MKT.idx.length;
+  const i = Math.round((e.clientX - r.left) / plotW * (MKT_LEN - 1)) - (MKT_LEN - n);
+  MKT.hover = Math.max(0, Math.min(n - 1, i));
+  drawChart($("idxChart"), MKT.idx, true);
+});
+$("idxChart").addEventListener("mouseleave", () => { MKT.hover = -1; drawChart($("idxChart"), MKT.idx, true); });
+window.addEventListener("resize", drawMarket);
+
+/* =========================================================
+   TROPHIES (achievements)
+   Checked once a second. Selling everything or getting foreclosed keeps them;
+   "Delete EVERYTHING" wipes them. Stored as { id: unlockTimestamp }.
+   ========================================================= */
+const recentClicks = [];
+let peakClickRate = 0;
+function recordClick(){
+  const now = performance.now();
+  recentClicks.push(now);
+  while (recentClicks.length && now - recentClicks[0] > 1000) recentClicks.shift();
+  peakClickRate = Math.max(peakClickRate, recentClicks.length);
+}
+const totalOwned = () => S.owned.reduce((a, b) => a + b, 0);
+const upgradesOwned = () => Object.keys(S.upgrades).length;
+const anyStock = fn => MKT.ind.some((h, i) => S.owned[i] > 0 && fn(h, i));
+const PROP_ACH = ["New Phone Who Dis", "Room Service", "Home Sweet Home", "Street Smart", "Won't You Be My Neighbor", "City Slicker",
+  "County Fair Champion", "State of the Art", "Country Club", "Continental Breakfast", "Halfway There", "Over the Moon", "Planet Owner",
+  "Sun's Out, Funds Out", "Star Neighbor", "Galaxy Brain", "Squad Goals", "Super Duper", "I See Everything", "Universal Remote", "Dimension Hopper"];
+const ACH = [];
+const A = (cat, id, icon, name, desc, test) => ACH.push({ cat, id, icon, name, desc, test });
+
+PROP_ACH.forEach((name, i) => A("Properties", "own_" + PROPS[i].key, PROPS[i].icon, name, `Own your first ${PROPS[i].name}.`, () => S.owned[i] >= 1));
+A("Properties", "own_10",   "🏢", "Landlord in Training",  "Own 10 properties in total.",    () => totalOwned() >= 10);
+A("Properties", "own_100",  "🏗️", "Property Ladder",       "Own 100 properties in total.",   () => totalOwned() >= 100);
+A("Properties", "own_500",  "🎲", "Board Game Champion",   "Own 500 properties in total.",   () => totalOwned() >= 500);
+A("Properties", "own_1000", "👑", "Owns Literally Everything", "Own 1,000 properties in total.", () => totalOwned() >= 1000);
+A("Properties", "own_100x", "💯", "Century Club",          "Own 100 of one property.",       () => S.owned.some(n => n >= 100));
+A("Properties", "own_all",  "🗂️", "Collector's Edition",   "Own at least one of every property.", () => S.owned.every(n => n >= 1));
+
+[[10, "🪙", "Allowance"], [1e3, "📰", "Paper Route Pro"], [1e6, "💰", "Millionaire Per Second"],
+ [1e9, "🤑", "Billionaire Per Second"], [1e12, "🏦", "Trillionaire Moves"], [1e15, "🚀", "Infinite Money Glitch"]]
+  .forEach(([n, icon, name]) => A("Money", "cps_" + n, icon, name, `Make ${money(n).replace(".000", "")} per second.`, () => D.cps >= n));
+
+[[100, "👆", "Clicky Clicky"], [1000, "🖐️", "Finger Workout"], [10000, "🦾", "Carpal Tunnel Champ"], [100000, "🤖", "Click Legend"]]
+  .forEach(([n, icon, name]) => A("Clicking", "clicks_" + n, icon, name, `Click the coin ${fmt(n)} times.`, () => S.clicks >= n));
+[[5, "⚡", "Speedy Finger"], [10, "🌩️", "Lightning Finger"], [15, "💥", "Is That Even Legal??"]]
+  .forEach(([n, icon, name]) => A("Clicking", "cspeed_" + n, icon, name, `Click ${n} times in one second.`, () => peakClickRate >= n));
+
+[[1, "✨", "First Glow-Up"], [10, "🛠️", "Home Makeover"], [25, "🏡", "Extreme Makeover"], [50, "👷", "Contractor's Best Friend"], [100, "🌈", "Renovation Nation"]]
+  .forEach(([n, icon, name]) => A("Upgrades", "upg_" + n, icon, name, `Buy ${n} upgrade${n > 1 ? "s" : ""}.`, () => upgradesOwned() >= n));
+A("Upgrades", "upg_all",  "🏆", "MAX LEVEL",     "Buy every single upgrade in the game.", () => upgradesOwned() >= UPGRADES.length);
+A("Upgrades", "upg_full", "💎", "Fully Loaded",  "Buy all 5 glow-ups for one property.",
+  () => PROPS.some((_, i) => UPGRADES.filter(u => u.type === "glow" && u.ind === i).every(u => S.upgrades[u.id])));
+
+A("Taxes", "help_t1",  "⏳", "Five More Minutes",          "Hire your first Tax Extension Guy.",            () => S.timerHelpers >= 1);
+A("Taxes", "help_t10", "📅", "Professional Procrastinator", "Hire 10 Tax Extension Guys.",                  () => S.timerHelpers >= 10);
+A("Taxes", "help_t24", "🗓️", "Homework Due Next Week",     "Stretch the Tax Man's timer to 48 hours.",      () => S.timerHelpers >= 24);
+A("Taxes", "help_n1",  "🤓", "Nerd Squad",                 "Hire your first Math Nerd Accountant.",         () => S.nerdHelpers >= 1);
+A("Taxes", "help_n25", "🧮", "Calculator Gang",            "Hire 25 Math Nerds.",                           () => S.nerdHelpers >= 25);
+A("Taxes", "help_n50", "🧠", "Big Brain Club",             "Hire 50 Math Nerds.",                           () => S.nerdHelpers >= 50);
+A("Taxes", "tax_neg",  "🎩", "Government Pays ME??",       "Get your tax multiplier to 0% or lower.",       () => D.taxMult <= 0);
+A("Taxes", "tax_pay",  "🧾", "Paid the Tax Man",           "Pay your taxes before he shows up.",            () => S.taxesPaid > 0);
+A("Taxes", "tax_7",    "😇", "Responsible Adult (Kinda)",  "Survive 7 Tax Man visits.",                     () => S.cyclesSurvived >= 7);
+A("Taxes", "tax_1b",   "🏛️", "Biggest Taxpayer Ever",      "Pay $1 billion in taxes total.",                () => S.taxesPaid >= 1e9);
+A("Taxes", "tax_ref",  "🎁", "Free Money",                 "Collect a tax refund.",                         () => S.refundsCollected > 0);
+A("Taxes", "tax_fc",   "😭", "FORECLOSED!",                "Get foreclosed. It happens to the best of us.", () => S.foreclosures >= 1);
+
+[[600, "🎮", "Just One More Click", "10 minutes"], [3600, "🍕", "Skipped a Snack Break", "1 hour"], [18000, "🌙", "Way Past Bedtime", "5 hours"],
+ [86400, "🛋️", "Didn't Go Outside", "24 hours"], [360000, "🌱", "Touch Grass Pls", "100 hours"]]
+  .forEach(([s, icon, name, label]) => A("Play Time", "time_" + s, icon, name, `Play for ${label} total.`, () => S.playTime >= s));
+
+A("Housing Market", "mkt_bull",  "🚂", "Hype Train",              "Have any property's price go up 10% in 3 minutes.",   () => anyStock(h => (pctChange(h) || 0) >= 10));
+A("Housing Market", "mkt_moon",  "🌕", "To the Moon",             "Have any property's price go up 50% in 3 minutes.",   () => anyStock(h => (pctChange(h) || 0) >= 50));
+A("Housing Market", "mkt_bear",  "📉", "Market Oopsie",           "Have any property's price drop 10% in 3 minutes.",    () => anyStock(h => (pctChange(h) || 0) <= -10));
+A("Housing Market", "mkt_index", "📈", "Line Go Up",              "Grow the CCHX index 25% in 3 minutes.",               () => (pctChange(MKT.idx) || 0) >= 25);
+A("Housing Market", "mkt_herd",  "🔥", "Everybody's Hyped",       "Have 3 properties HYPED at the same time.",           () => MKT.mood.filter((m, i) => S.owned[i] > 0 && m > 1.04).length >= 3);
+A("Housing Market", "mkt_hype",  "🤩", "Hype Beast",              "Get a property's hype to 125%.",                      () => MKT.mood.some((m, i) => S.owned[i] > 0 && m >= 1.25));
+A("Housing Market", "mkt_mil",   "💵", "Million Dollar Listing",  "Get one property's price to $1 million.",             () => MKT.ind.some(h => (h[h.length - 1] || 0) >= 1e6));
+A("Housing Market", "mkt_crash", "🕳️", "Line Go Down",            "Watch the CCHX index lose 90% of its value.",
+  () => { const h = MKT.idx, hi = Math.max(0, ...h); return hi > 0 && h[h.length - 1] <= hi * 0.1; });
+
+const ACH_BY_ID = Object.fromEntries(ACH.map(a => [a.id, a]));
+const ACH_CATS = [...new Set(ACH.map(a => a.cat))];
+
+function checkAchievements(quiet){
+  const fresh = [];
+  for (const a of ACH) {
+    if (S.achievements[a.id]) continue;
+    let ok = false; try { ok = a.test(); } catch (e) { ok = false; }
+    if (ok) { S.achievements[a.id] = Date.now(); fresh.push(a); }
+  }
+  if (fresh.length && !quiet) {
+    if (fresh.length <= 3) fresh.forEach(a => toast(`🏆 TROPHY UNLOCKED: ${a.name}`, "gold"));
+    else toast(`🏆 ${fresh.length} trophies unlocked at once!!`, "gold");
+  }
+  $("achTabCount").textContent = Object.keys(S.achievements).length + "/" + ACH.length;
+  if (fresh.length && !$("tab-ach").hidden) renderAchievements();
+}
+let lastAchKey = "";
+function renderAchievements(){
+  const got = Object.keys(S.achievements).length;
+  const key = got + ":" + ACH.length;
+  if (key === lastAchKey && $("achievements").childElementCount) return;
+  lastAchKey = key;
+  let html = `<div class="achHead"><span>Trophies</span><span>${got} / ${ACH.length}</span></div>
+    <div class="achBar"><div style="width:${(got / ACH.length * 100).toFixed(1)}%"></div></div>`;
+  for (const cat of ACH_CATS) {
+    const list = ACH.filter(a => a.cat === cat), n = list.filter(a => S.achievements[a.id]).length;
+    html += `<div class="achCat">${esc(cat)}<span>${n}/${list.length}</span></div><div class="achGrid">` +
+      list.map(a => `<div class="ach${S.achievements[a.id] ? "" : " locked"}" data-tt="ach:${a.id}">${S.achievements[a.id] ? a.icon : "🔒"}</div>`).join("") + `</div>`;
+  }
+  $("achievements").innerHTML = html;
+}
+
+/* =========================================================
+   WIRING
+   ========================================================= */
+buildBuildingRows();
+$("coin").addEventListener("click", clickCoin);
+$("payBtn").addEventListener("click", payTaxes);
+$("timerHelpBtn").addEventListener("click", buyTimerHelper);
+$("nerdHelpBtn").addEventListener("click", buyNerdHelper);
+$("timerFireBtn").addEventListener("click", fireTimerHelper);
+$("nerdFireBtn").addEventListener("click", fireNerdHelper);
+$("startOverBtn").addEventListener("click", startOver);
+$("saveNow").addEventListener("click", () => { save(); toast(canSave ? "Game saved! 💾" : "This browser won't let the game save here. Try Export instead.", !canSave); });
+$("exportBtn").addEventListener("click", exportSave);
+$("importBtn").addEventListener("click", importSave);
+$("resetBtn").addEventListener("click", hardReset);
+let nameBeforeEdit = "";
+$("companyName").addEventListener("focus", () => { nameBeforeEdit = S.company; });
+$("companyName").addEventListener("input", e => { S.company = e.target.value.trim() || "No Name Real Estate"; });
+$("companyName").addEventListener("keydown", e => {
+  if (e.key === "Enter") e.target.blur();
+  if (e.key === "Escape") { S.company = nameBeforeEdit; e.target.value = S.company; e.target.blur(); }
+});
+$("companyName").addEventListener("change", e => { e.target.value = S.company; save(); toast(`Your company is now called ${S.company}. Sick name.`); });
+$("editName").addEventListener("click", () => { const i = $("companyName"); i.focus(); i.select(); });
+document.querySelectorAll(".buyAmt button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".buyAmt button").forEach(x => x.classList.toggle("on", x === b));
+  buyAmt = +b.dataset.amt; render(); refreshTip();
+}));
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".tabBody").forEach(x => x.hidden = x.id !== "tab-" + b.dataset.tab);
+  if (b.dataset.tab === "stats") renderStats();
+  if (b.dataset.tab === "ach") renderAchievements();
+}));
+$("modalBg").addEventListener("click", e => { if (e.target === $("modalBg") && !$("modal").classList.contains("bad")) hideModal(); });
+
+// ---------- Start the game ----------
+recompute();
+$("companyName").value = S.company;
+load();
+rebuildStore(); rebuildLog(); render();
+$("tickerText").textContent = newsLine();
+for (let k = 0; k < 60; k++) sampleMarket(); // a minute of history so the charts aren't empty
+drawMarket();
+
+let tickCount = 0, lastPlayTick = Date.now();
+checkAchievements(true); // quietly give out anything an older save already earned
+setInterval(() => {
+  advance(Date.now());
+  rebuildStore(); render();
+  const nowMs = Date.now();
+  S.playTime += Math.min(1, Math.max(0, (nowMs - lastPlayTick) / 1000)); // only counts time with the game open
+  lastPlayTick = nowMs;
+  if (++tickCount % 10 === 0) { // once a second
+    if (D.cps > 0 && !document.hidden) {
+      const r = $("coin").getBoundingClientRect();
+      floater("+" + money(D.cps), r.left + r.width / 2 - 20, r.top + 10, "auto");
+    }
+    sampleMarket(); drawMarket(); checkAchievements();
+    if (!$("tab-stats").hidden) renderStats();
+    if (!$("tab-ach").hidden) renderAchievements();
+    refreshTip();
+  }
+}, 100);
+setInterval(save, 30000);
+setInterval(rotateNews, 12000);
+window.addEventListener("beforeunload", save);
+document.addEventListener("visibilitychange", save);
+</script>
+</body>
+</html>
