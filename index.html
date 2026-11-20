@@ -460,7 +460,7 @@ const PROPS = PROPERTY_LIST.map(([key, name, sector, icon, flavor], i) => ({
 const TICKERS = ["PHON","ROOM","HOUS","STRT","HOOD","CITY","CNTY","STAT","CTRY","CONT","HEMI","MOON","PLNT","SOLR","STAR","GLXY","GGRP","SUPR","OBSV","UNIV","DIMN"];
 
 /* =========================================================
-   GLOW-UPS (each one: that property earns x2, property taxes +1%)
+   GLOW-UPS (each one boosts that property's money, and property taxes +1%)
    ========================================================= */
 const GLOWUPS = [
   [ // My Phone
@@ -616,6 +616,9 @@ const GLOWUP_THRESHOLDS = [1, 5, 25, 50, 100];
 // ...and each glow-up costs this many times the property's starting price (the usual clicker ladder:
 // cheap early boosts, then big jumps that are worth saving up for)
 const GLOWUP_PRICE_X = [10, 50, 500, 50000, 5e6];
+// Each glow-up multiplies that property's money by more than the one before.
+// All five together: 1.5 x 2 x 3 x 4 x 5 = x180.
+const GLOWUP_BOOST = [1.5, 2, 3, 4, 5];
 
 /* =========================================================
    BUILD UPGRADE LIST
@@ -626,22 +629,29 @@ GLOWUPS.forEach((list, ind) => {
   list.forEach(([name, desc], k) => {
     const req = GLOWUP_THRESHOLDS[k];
     UPGRADES.push({ id:`g_${PROPS[ind].key}_${k}`, type:"glow", ind, req, name, desc,
-      cost: base * GLOWUP_PRICE_X[k], icon: PROPS[ind].icon });
+      cost: base * GLOWUP_PRICE_X[k], boost: GLOWUP_BOOST[k], icon: PROPS[ind].icon });
   });
 });
+// Click upgrades also get stronger as they get pricier.
+// "x": multiplies your click power. "pct": every click also earns that share of your money per second.
 const CLICKS = [
-  ["c0", "Gaming Mouse",                 "It has RGB lights. RGB means more money. Everybody knows that.",              100,    "x2"],
-  ["c1", "Juice Box Power-Up",           "It's apple juice. But I feel SO FAST right now.",                             500,    "x2"],
-  ["c2", "Finger Push-Ups",              "My clicking finger has abs now. Look at it. LOOK AT IT.",                    10000,  "x2"],
-  ["c3", "Lucky Penny",                  "Found it on the sidewalk, heads up. Every click is luckier now.",            1e5,    "pct"],
-  ["c4", "Pro Gamer Gloves",             "Fingerless gloves, just like the pros wear. Clicks are now 'professional.'", 1e7,    "pct"],
-  ["c5", "Little Sister Auto-Clicker",   "My little sister clicks for me now. I pay her in gummy bears.",              1e9,    "pct"],
-  ["c6", "Golden Finger",                "I dipped my finger in gold paint. It's permanent now. Worth it.",            1e11,   "pct"],
-  ["c7", "THE ULTIMATE CLICK",           "One click to rule them all. My finger is a legend. Bow to the finger.",      1e13,   "pct"],
+  ["c0", "Gaming Mouse",                 "It has RGB lights. RGB means more money. Everybody knows that.",              100,    "x",   2,    "🖱️"],
+  ["c1", "Juice Box Power-Up",           "It's apple juice. But I feel SO FAST right now.",                             500,    "x",   3,    "🧃"],
+  ["c2", "Finger Push-Ups",              "My clicking finger has abs now. Look at it. LOOK AT IT.",                    10000,  "x",   4,    "💪"],
+  ["c3", "Lucky Penny",                  "Found it on the sidewalk, heads up. Every click is luckier now.",            1e5,    "pct", 0.01, "🍀"],
+  ["c4", "Pro Gamer Gloves",             "Fingerless gloves, just like the pros wear. Clicks are now 'professional.'", 1e7,    "pct", 0.02, "🧤"],
+  ["c5", "Little Sister Auto-Clicker",   "My little sister clicks for me now. I pay her in gummy bears.",              1e9,    "pct", 0.03, "👧"],
+  ["c6", "Golden Finger",                "I dipped my finger in gold paint. It's permanent now. Worth it.",            1e11,   "pct", 0.05, "👆"],
+  ["c7", "THE ULTIMATE CLICK",           "One click to rule them all. My finger is a legend. Bow to the finger.",      1e13,   "pct", 0.10, "👑"],
 ];
-CLICKS.forEach(([id, name, desc, cost, kind]) => {
-  UPGRADES.push({ id, type:"click", kind, name, desc, cost, unlockAt: cost * 0.4, icon: kind === "x2" ? "🖱️" : "👆" });
+CLICKS.forEach(([id, name, desc, cost, kind, power, icon]) => {
+  UPGRADES.push({ id, type:"click", kind, power, name, desc, cost, unlockAt: cost * 0.4, icon });
 });
+// How an upgrade's bonus reads in the store, tooltips and messages
+function bonusText(u){
+  if (u.type === "glow") return `${PROPS[u.ind].name} money ×${u.boost}`;
+  return u.kind === "x" ? `click power ×${u.power}` : `+${u.power * 100}% of your money per second on every click`;
+}
 const UPG_BY_ID = Object.fromEntries(UPGRADES.map(u => [u.id, u]));
 
 /* =========================================================
@@ -675,16 +685,16 @@ const D = { cps: 0, clickPower: 1, indMult: [], indCps: [], glowups: 0, taxMult:
    ========================================================= */
 function maxTimer(){ return BASE_TIMER + S.timerHelpers * HOUR; }
 function recompute(){
-  const glowIn = PROPS.map(() => 0);
+  const boostIn = PROPS.map(() => 1);
   let clickX = 1, clickPct = 0, glowups = 0;
   for (const id in S.upgrades) {
     const u = UPG_BY_ID[id]; if (!u) continue;
-    if (u.type === "glow") { glowIn[u.ind]++; glowups++; }
-    else if (u.type === "click") { if (u.kind === "x2") clickX *= 2; else clickPct += 0.01; }
+    if (u.type === "glow") { boostIn[u.ind] *= u.boost; glowups++; }
+    else if (u.type === "click") { if (u.kind === "x") clickX *= u.power; else clickPct += u.power; }
   }
   let cps = 0;
   PROPS.forEach((p, i) => {
-    D.indMult[i] = Math.pow(2, glowIn[i]);
+    D.indMult[i] = boostIn[i];
     D.indCps[i] = S.owned[i] * p.cps * D.indMult[i];
     cps += D.indCps[i];
   });
@@ -792,7 +802,7 @@ function buyUpgrade(id){
   S.dollars -= u.cost; S.upgrades[id] = true;
   if (u.type === "glow") MKT.mood[u.ind] = Math.min(1.5, MKT.mood[u.ind] * 1.15); // a fresh glow-up gets people hyped
   recompute(); rebuildStore(); rebuildLog(); hideTip(); render();
-  if (u.type === "glow") toast(`✨ Glow-up: “${u.name}”! ${PROPS[u.ind].name} money ×2. (Taxes +1%)`);
+  if (u.type === "glow") toast(`✨ Glow-up: “${u.name}”! ${bonusText(u)}. (Taxes +1%)`);
 }
 function buyTimerHelper(){
   const c = timerHelpCost(); if (S.dollars < c) return;
@@ -854,8 +864,8 @@ function buildBuildingRows(){
 let lastUpgKey = "", showAllUpgrades = false;
 const UPG_PREVIEW = 6; // the cheapest few are shown; the rest are behind "Show all"
 function upgradeTag(u){
-  if (u.type === "glow") return "Glow-Up · " + PROPS[u.ind].name + " ×2";
-  return u.kind === "x2" ? "Clicking · click power ×2" : "Clicking · +1% of your income per click";
+  if (u.type === "glow") return "Glow-Up · " + bonusText(u);
+  return u.kind === "x" ? "Clicking · " + bonusText(u) : `Clicking · +${u.power * 100}% of your income per click`;
 }
 function rebuildStore(){
   const avail = UPGRADES.filter(upgradeUnlocked).sort((a, b) => a.cost - b.cost);
@@ -1008,10 +1018,10 @@ function tipHTML(key){
     let sec, bonus, pen = "";
     if (u.type === "glow") {
       sec = PROPS[u.ind].sector + " · Glow-Up";
-      bonus = `${esc(PROPS[u.ind].name)} makes ×2 money`;
+      bonus = esc(bonusText(u));
       pen = `<div class="tp">Catch: property taxes +1% (fancier stuff = more taxes)</div>`;
     } else {
-      sec = "Clicking"; bonus = u.kind === "x2" ? "Click power ×2" : "Every click also earns +1% of your money per second";
+      sec = "Clicking"; bonus = u.kind === "x" ? `Click power ×${u.power}` : `Every click also earns +${u.power * 100}% of your money per second`;
     }
     return `<div class="tn">${u.icon} ${esc(u.name)}</div><div class="ts">${esc(sec)}</div><div class="td">${esc(u.desc)}</div>
       <div class="tb">Bonus: ${bonus}</div>${pen}<div class="tc">Cost: ${money(u.cost)}</div>`;
