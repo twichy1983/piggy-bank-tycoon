@@ -517,7 +517,10 @@ footer{font-size:12px;color:#6f80b5;margin-top:18px;line-height:1.5}
 /* =========================================================
    CONSTANTS
    ========================================================= */
-const SAVE_KEY = "coinClicker.v2";
+const SAVE_KEY = "piggyBankTycoon.v1";
+// Saves from before the rename. Only ever read, never written, so games sharing this
+// website (like the Wolfgang clicker game on the same GitHub Pages site) keep their own saves.
+const COIN_SAVE_KEY = "coinClicker.v2";
 const OLD_SAVE_KEY = "coinClicker";   // the simple version of the game
 const HOUR = 3600 * 1000;
 const BASE_TIMER = 24 * HOUR;         // the Tax Man comes every 24 hours
@@ -1343,7 +1346,7 @@ function applyLoaded(obj, isImport){
 }
 function load(){
   let raw = null, old = null;
-  try { raw = localStorage.getItem(SAVE_KEY); old = localStorage.getItem(OLD_SAVE_KEY); }
+  try { raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem(COIN_SAVE_KEY); old = localStorage.getItem(OLD_SAVE_KEY); }
   catch (e) { canSave = false; toast("This browser won't let the game save here. Use Export in the Save tab to keep your progress.", true); return; }
   if (raw) {
     try { applyLoaded(decodeSave(raw), false); }

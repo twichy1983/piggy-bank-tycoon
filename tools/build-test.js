@@ -14,9 +14,11 @@ rep(`<title>Piggy Bank Tycoon</title>`, `<title>Piggy Bank Tycoon (TEST: everyth
 rep(`<body>`, `<body>
 <div style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:9999;background:#ff3b6b;color:#fff;font-weight:900;padding:4px 14px;border-radius:0 0 10px 10px;box-shadow:0 3px 0 #000;pointer-events:none">🧪 TEST VERSION: everything costs $0</div>`);
 
-// Separate save, and don't pull in the old simple game's save either
-rep(`const SAVE_KEY = "coinClicker.v2";`, `const SAVE_KEY = "coinClicker.test";`);
-rep(`const OLD_SAVE_KEY = "coinClicker";`, `const OLD_SAVE_KEY = "coinClicker.test.none";`);
+// Separate save, and don't pull in the real game's saves (or the older ones) either.
+// (Keeps reading the test save from before the rename, so your test progress stays.)
+rep(`const SAVE_KEY = "piggyBankTycoon.v1";`, `const SAVE_KEY = "piggyBankTycoon.test";`);
+rep(`const COIN_SAVE_KEY = "coinClicker.v2";`, `const COIN_SAVE_KEY = "coinClicker.test";`);
+rep(`const OLD_SAVE_KEY = "coinClicker";`, `const OLD_SAVE_KEY = "piggyBankTycoon.test.none";`);
 
 // Properties, helpers and firing are free
 rep(`function buildingCost(i, n){`, `function buildingCost(i, n){ return 0;`);
