@@ -2306,20 +2306,24 @@ function mailboxAt(p, scroll){ // the mailbox under a point on the screen, if an
 }
 const PaperGame = {
   winBig: "ROUTE DONE! 🗞️", winMsg: "Every house got its paper on time. The neighbors paid you:", toast: "You finished your paper route!",
+  goalText: `Get ${PR.GOAL} papers into mailboxes in ${PR.TIME} seconds!`,
+  howTo: "Your bike rides down the street by itself. Click a mailbox (look for the bouncing yellow arrow) to throw a newspaper into it!",
   start(){
     if (!route) buildRoute();
-    Object.assign(G, { phase: "count", t: 0, cd: 3.2, scroll: 0, speed: PR.SPEED, got: new Set(), aimed: new Set(), n: 0,
+    Object.assign(G, { phase: G.skipIntro ? "count" : "intro", skipIntro: false, t: 0, cd: 3.2, scroll: 0, speed: PR.SPEED, got: new Set(), aimed: new Set(), n: 0,
       flying: [], ground: [], sparks: [], pops: [], dust: [], dustT: 0, throwT: 0, last: performance.now(), hover: -1, shownSec: -1 });
   },
   progress: () => [G.n, PR.GOAL],
   label: (n, t) => `🗞️ ${n} / ${t} delivered`,
   hint(n, t){
+    if (G.phase === "intro") return "Read how to play, then click the game to start! ▶";
     if (G.phase === "count") return `Get ready! Get ${t} papers into mailboxes in ${PR.TIME} seconds.`;
     if (G.phase === "over") return "Time's up! Click the street to try again.";
     return t - n <= 2 ? `Just ${t - n} more! Keep going! 🚲` : "Click a mailbox to throw a newspaper into it!";
   },
   down(p){
-    if (G.phase === "over") { this.start(); updateGameHud(); return; }
+    if (introStart()) return;
+    if (G.phase === "over") { G.skipIntro = true; this.start(); updateGameHud(); return; }
     if (G.phase !== "go" || G.throwT > 0) return;
     G.throwT = PR.COOLDOWN;
     const sx = route.handX + G.scroll, sy = route.handY;
@@ -2450,6 +2454,7 @@ const PaperGame = {
       g.font = `bold ${size}px 'Comic Sans MS', cursive`; g.strokeStyle = "#000"; g.lineWidth = size / 6; g.fillStyle = color;
       g.strokeText(text, GW / 2, y); g.fillText(text, GW / 2, y);
     };
+    if (G.phase === "intro") drawIntro(g, this);
     if (G.phase === "count") {
       const c = Math.ceil(G.cd - 0.2);
       big(c > 0 ? String(c) : "GO! 🚲", GH / 2 - 40, c > 0 ? 110 : 90, c > 0 ? "#fff" : "#9dff6b");
@@ -2466,7 +2471,35 @@ const PaperGame = {
 
 // ---------- shared bits for the timed games (a 3-2-1 countdown, a timer, and a free retry) ----------
 const FONT = "'Comic Sans MS', 'Comic Neue', cursive";
-function timedReset(time){ Object.assign(G, { phase: "count", cd: 3.2, t: 0, time, last: performance.now(), shownSec: -1 }); }
+// Each game opens on a "How to play" screen that stays up until you click (a retry skips it).
+function timedReset(time){ Object.assign(G, { phase: G.skipIntro ? "count" : "intro", cd: 3.2, t: 0, time, last: performance.now(), shownSec: -1, skipIntro: false }); }
+function introStart(){ // done reading: start the 3-2-1 countdown
+  if (!G || G.phase !== "intro") return false;
+  G.phase = "count"; G.cd = 3.2; G.last = performance.now(); $("gameCv").className = ""; updateGameHud();
+  return true;
+}
+function howTo(game){ // the "how to play" words: the game's own, or the tip it shows while you play
+  if (game.howTo) return game.howTo;
+  const was = G.phase; G.phase = "go"; const t = game.hint(...game.progress()); G.phase = was; return t;
+}
+function drawIntro(g, game){
+  g.fillStyle = "rgba(10,15,30,.78)"; g.fillRect(0, 0, GW, GH);
+  const x = 150, y = 70, w = 660, h = 400;
+  g.fillStyle = "#fffbe8"; g.strokeStyle = INK; g.lineWidth = 5; g.beginPath(); g.roundRect(x, y, w, h, 24); g.fill(); g.stroke();
+  g.textBaseline = "alphabetic";
+  bigText(g, `${G.job.icon} ${G.job.name}`, y + 64, 40, "#ffd84a");
+  g.font = `bold 15px ${FONT}`; g.textAlign = "center"; g.fillStyle = "#8a6a3a"; g.fillText("HOW TO PLAY", GW / 2, y + 104);
+  g.fillStyle = "#c2410c"; g.font = `bold 24px ${FONT}`;
+  let ly = y + 146; for (const line of wrapText(g, game.goalText || "", w - 80)) { g.fillText(line, GW / 2, ly); ly += 32; }
+  g.fillStyle = "#2b1a12"; g.font = `bold 20px ${FONT}`; ly += 10;
+  for (const line of wrapText(g, howTo(game), w - 80)) { g.fillText(line, GW / 2, ly); ly += 28; }
+  const pulse = 1 + Math.sin(performance.now() / 220) * 0.05;
+  g.save(); g.translate(GW / 2, y + h - 52); g.scale(pulse, pulse);
+  g.fillStyle = "#3fbf4a"; g.strokeStyle = INK; g.lineWidth = 4; g.beginPath(); g.roundRect(-170, -30, 340, 60, 16); g.fill(); g.stroke();
+  g.textBaseline = "middle"; bigText(g, "Click to start! ▶", 2, 28, "#fff", 0); g.textBaseline = "alphabetic";
+  g.restore();
+  g.font = `14px ${FONT}`; g.fillStyle = "#8a6a3a"; g.textAlign = "center"; g.fillText("(or press Enter)", GW / 2, y + h - 8);
+}
 function timedTick(){ // moves the clock along and returns how many seconds passed
   const now = performance.now(), dt = Math.min(0.05, (now - G.last) / 1000); G.last = now;
   if (G.phase === "count") { G.cd -= dt; if (G.cd <= 0) { G.phase = "go"; updateGameHud(); } }
@@ -2479,8 +2512,13 @@ function timedTick(){ // moves the clock along and returns how many seconds pass
   return dt;
 }
 function timedWin(){ if (G.phase === "go") { G.phase = "won"; finishGame(); } }
-function timedRetry(game){ if (G.phase !== "over") return false; game.start(); updateGameHud(); return true; }
+function timedRetry(game){ // clicks on the how-to and time's-up screens
+  if (introStart()) return true;
+  if (G.phase !== "over") return false;
+  G.skipIntro = true; game.start(); updateGameHud(); return true;
+}
 function timedHint(game, playing){
+  if (G.phase === "intro") return "Read how to play, then click the game to start! ▶";
   if (G.phase === "count") return `Get ready! ${game.goalText}`;
   if (G.phase === "over") return "Time's up! Click the game to try again.";
   return playing;
@@ -2498,6 +2536,7 @@ function drawTimed(g, game){ // the timer, the countdown, and the time's up scre
   g.beginPath(); g.roundRect(tx, ty, 98, 44, 12); g.fill(); g.stroke();
   g.font = `bold 26px ${FONT}`; g.fillStyle = "#fff"; g.textAlign = "center";
   g.fillText(`⏱ ${Math.ceil(left)}`, tx + 49, ty + 32);
+  if (G.phase === "intro") drawIntro(g, game);
   if (G.phase === "count") {
     const c = Math.ceil(G.cd - 0.2);
     bigText(g, c > 0 ? String(c) : "GO!", GH / 2 - 40, c > 0 ? 110 : 90, c > 0 ? "#fff" : "#9dff6b");
@@ -3396,6 +3435,7 @@ function newFlag(){
 const FlagGame = {
   winBig: "FLAG DAY! 🏛️", winMsg: "Every flag in the state now has your design on it. Very official. The state paid you:", toast: "Your flags are flying all over the state!",
   goalText: `Remember each flag, then build it! Make ${FLAG.GOAL} flags.`,
+  howTo: "A flag shows for 3 seconds. Remember it! Then pick its color, pattern and sticker on the board and press Raise it! Forgot? Press Peek.",
   start(){
     if (!flagBg) flagBg = buildFlagBg();
     timedReset(FLAG.TIME);
@@ -4731,7 +4771,11 @@ $("gameCv").addEventListener("pointerdown", e => { if (G && !G.done) G.game.down
 $("gameCv").addEventListener("pointermove", e => { if (G) G.game.move(canvasPt(e)); });
 $("gameCv").addEventListener("pointerup", () => { if (G) G.game.up(); });
 $("gameCv").addEventListener("pointercancel", () => { if (G) G.game.up(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && G) closeGame(); else if (G && !G.done && G.game.key) G.game.key(e.key); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && G) closeGame();
+  else if (G && G.phase === "intro" && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); introStart(); }
+  else if (G && !G.done && G.game.key) G.game.key(e.key);
+});
 
 /* =========================================================
    WIRING
