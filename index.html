@@ -44,6 +44,8 @@ h2{font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);
 #editName:hover{color:var(--gold)}
 .bank{text-align:center;margin:14px 0 6px;background:rgba(0,0,0,.35);border:3px solid var(--gold2);border-radius:14px;padding:12px}
 #dollars{font-size:clamp(24px,2.8vw,40px);font-weight:900;color:#fff7d1;text-shadow:3px 3px 0 #000,0 0 14px rgba(255,213,74,.5);word-break:break-word}
+#dollars.debt{color:#ff7a7a;text-shadow:3px 3px 0 #000,0 0 14px rgba(255,60,60,.6)}
+#dollars .debtTag{display:block;font-size:14px;color:#ffb3b3;letter-spacing:1px}
 #cps{font-size:15px;color:var(--lime);margin-top:4px}
 #coinWrap{position:relative;display:flex;justify-content:center;align-items:center;height:320px}
 #coinWrap::before,#coinWrap::after{content:"";position:absolute;width:262px;height:262px;border-radius:50%;
@@ -471,7 +473,7 @@ footer{font-size:12px;color:#6f80b5;margin-top:18px;line-height:1.5}
         <button class="btn danger" id="resetBtn">🔥 Delete EVERYTHING</button>
       </div>
       <div class="note" id="saveNote">Saves to this browser every 30 seconds.</div>
-      <div class="note">The Tax Man's clock keeps ticking even when this tab is closed. If he shows up and you still owe taxes, you get FORECLOSED and lose all your stuff. Your properties keep earning while you're gone too, but only for up to 24 hours.</div>
+      <div class="note">The Tax Man's clock keeps ticking even when this tab is closed. If he shows up and you still owe taxes, he takes them out of your money himself, even if that puts you in debt. Your properties keep earning while you're gone too, but only for up to 24 hours.</div>
     </div>
     <footer>Made by a kid who is gonna be a real estate billionaire someday. All jokes are jokes. Please do not actually buy the moon without asking your parents first.</footer>
   </div>
@@ -595,32 +597,34 @@ const PROPERTY_LIST = [
   ["univ",    "My Universe",             "Literally Everything",          "🌀", "I own EVERYTHING. Even the stuff I can't see. Even the socks that disappear in the dryer."],
   ["dim",     "My Dimension",            "Beyond Everything",             "♾️", "I opened a portal to another dimension and bought it. The other me in there is also rich. We high-fived."],
 ];
-// Prices follow a classic clicker curve: the first property is cheap, each new one costs
-// roughly 10-15x the one before, and the time it takes to pay for itself (cost / money per
-// second) roughly doubles every step, so new properties are exciting but never a no-brainer.
+// Prices follow the classic clicker curve: the first property is cheap and each new one costs
+// roughly 10-15x the one before. The time a property takes to pay for itself (cost / money per
+// second) grows by about 1.5x per step, so a new property is always a bit of a stretch but the
+// next one is never months away. (Simulated: someone playing 2 hours a day gets to My City in
+// about an hour, My Country in a day, My Galaxy Group in ~2 weeks and My Dimension in a few months.)
 //                 cost      $/sec      pays for itself in
 const BALANCE = [
-  [15,      0.1],     // My Phone                 150 s
-  [120,     1],       // My Room                  120 s
-  [1300,    8],       // My House                 ~2.7 min
-  [14000,   50],      // My Street                ~4.7 min
+  [15,      0.1],     // My Phone                 2.5 min
+  [120,     1],       // My Room                  2 min
+  [1300,    8],       // My House                 ~3 min
+  [14000,   50],      // My Street                ~5 min
   [150000,  280],     // My Neighborhood          ~9 min
   [1.7e6,   1500],    // My City                  ~19 min
   [2.2e7,   8500],    // My County                ~43 min
-  [3.5e8,   48000],   // My State                 ~2 h
-  [5.5e9,   290000],  // My Country               ~5 h
-  [8e10,    1.8e6],   // My Continent             ~12 h
-  [1.1e12,  1.1e7],   // My Hemisphere            ~28 h
-  [1.6e13,  7.2e7],   // My Moon                  ~2.6 days
-  [2e14,    4.7e8],   // My Planet                ~5 days
-  [2.5e15,  3.2e9],   // My Solar System          ~9 days
-  [3e16,    2.3e10],  // My Stellar Neighborhood  ~15 days
-  [3.7e17,  1.65e11], // My Galaxy                ~26 days
-  [5e18,    1.2e12],  // My Galaxy Group          ~48 days
-  [8e19,    9e12],    // My Supercluster          ~103 days
-  [1.5e21,  7e13],    // My Observable Universe   ~248 days
-  [3e22,    5.5e14],  // My Universe              ~1.7 years
-  [7e23,    4.5e15],  // My Dimension             ~5 years
+  [3.5e8,   9e4],     // My State                 ~1.1 h
+  [5.5e9,   9.4e5],   // My Country               ~1.6 h
+  [8e10,    9.2e6],   // My Continent             ~2.4 h
+  [1.1e12,  8.4e7],   // My Hemisphere            ~3.6 h
+  [1.6e13,  8.1e8],   // My Moon                  ~5.5 h
+  [2e14,    6.8e9],   // My Planet                ~8 h
+  [2.5e15,  5.7e10],  // My Solar System          ~12 h
+  [3e16,    4.5e11],  // My Stellar Neighborhood  ~18.5 h
+  [3.7e17,  3.7e12],  // My Galaxy                ~28 h
+  [5e18,    3.4e13],  // My Galaxy Group          ~41 h
+  [8e19,    3.6e14],  // My Supercluster          ~2.6 days
+  [1.5e21,  4.5e15],  // My Observable Universe   ~3.9 days
+  [3e22,    6e16],    // My Universe              ~5.8 days
+  [7e23,    9.3e17],  // My Dimension             ~8.7 days
 ];
 const PROPS = PROPERTY_LIST.map(([key, name, sector, icon, flavor], i) => ({
   key, name, sector, icon, flavor, base: BALANCE[i][0], cps: BALANCE[i][1],
@@ -787,6 +791,9 @@ const GLOWUP_PRICE_X = [10, 50, 500, 50000, 5e6];
 // Each glow-up multiplies that property's money by more than the one before.
 // All five together: 1.5 x 2 x 3 x 4 x 5 = x180.
 const GLOWUP_BOOST = [1.5, 2, 3, 4, 5];
+// Every trophy you earn makes all your properties earn this much more (2% each), like
+// "milk" in classic clickers, so collecting trophies keeps paying off all game long.
+const TROPHY_BONUS = 0.02;
 
 /* =========================================================
    BUILD UPGRADE LIST
@@ -811,6 +818,10 @@ const CLICKS = [
   ["c5", "Little Sister Auto-Clicker",   "My little sister clicks for me now. I pay her in gummy bears.",              1e9,    "pct", 0.03, "👧"],
   ["c6", "Golden Finger",                "I dipped my finger in gold paint. It's permanent now. Worth it.",            1e11,   "pct", 0.05, "👆"],
   ["c7", "THE ULTIMATE CLICK",           "One click to rule them all. My finger is a legend. Bow to the finger.",      1e13,   "pct", 0.10, "👑"],
+  ["c8", "Robot Finger",                 "I built a robot finger out of LEGO. It clicks while I eat cereal.",          1e15,   "pct", 0.10, "🤖"],
+  ["c9", "Rocket-Powered Click",         "I strapped a tiny rocket to my finger. The piggy bank felt that one.",       1e17,   "pct", 0.10, "🚀"],
+  ["c10", "Galaxy-Brain Click",          "I'm not clicking with my finger anymore. I'm clicking with my MIND.",        1e19,   "pct", 0.10, "🌌"],
+  ["c11", "The Click Heard 'Round the Universe", "Every click shakes the whole universe a little. Sorry, aliens.",     1e21,   "pct", 0.10, "🌀"],
 ];
 CLICKS.forEach(([id, name, desc, cost, kind, power, icon]) => {
   UPGRADES.push({ id, type:"click", kind, power, name, desc, cost, unlockAt: cost * 0.4, icon });
@@ -839,7 +850,7 @@ function newState(){
   return Object.assign(freshRun(now), {
     version: 2, company: "Big W Real Estate",
     allTimeEarned: 0, clicks: 0, clickEarned: 0,
-    taxesPaid: 0, refundsCollected: 0, foreclosures: 0, cyclesSurvived: 0,
+    taxesPaid: 0, refundsCollected: 0, foreclosures: 0, cyclesSurvived: 0, taxGrabs: 0, taxGrabbed: 0,
     achievements: {}, playTime: 0,
     startedAt: now, lastTick: now,
     lastMow: 0, lawnsMowed: 0, lastClean: 0, roomsCleaned: 0, lastPaper: 0, paperRoutes: 0,
@@ -866,8 +877,9 @@ function recompute(){
     else if (u.type === "click") { if (u.kind === "x") clickX *= u.power; else clickPct += u.power; }
   }
   let cps = 0;
+  D.trophyX = 1 + TROPHY_BONUS * Object.keys(S.achievements).length; // every trophy you've earned boosts all properties
   PROPS.forEach((p, i) => {
-    D.indMult[i] = boostIn[i];
+    D.indMult[i] = boostIn[i] * D.trophyX;
     D.indCps[i] = S.owned[i] * p.cps * D.indMult[i];
     cps += D.indCps[i];
   });
@@ -911,8 +923,12 @@ function advance(now){
     if (!taxManArrives(S.deadline, now)) break;
   }
   S.lastTick = now;
+  if (taxGrab.count && !advance.quiet) toast(tellTaxGrab(), true);
 }
-// Returns true if you survive the visit (no taxes owed), false if you get foreclosed.
+// What the Tax Man took by himself since the last time we told you (see tellTaxGrab).
+let taxGrab = { amount: 0, count: 0 };
+// The Tax Man shows up. If you owe taxes, he takes them straight out of your money,
+// even if that puts you in debt. Always returns true (the game keeps going).
 function taxManArrives(at, now){
   if (S.taxes <= 0) {
     const refund = -S.taxes;
@@ -921,14 +937,26 @@ function taxManArrives(at, now){
     toast(refund > 0 ? `The Tax Man came by and gave YOU a ${money(refund)} refund. LOL.` : "The Tax Man came by. You owed nothing. He left sad.");
     return true;
   }
-  foreclose(now);
-  return false;
+  const owed = S.taxes;
+  S.dollars -= owed; S.taxGrabbed += owed; S.taxGrabs++;
+  S.taxes = 0; S.deadline = at + maxTimer();
+  taxGrab.amount += owed; taxGrab.count++;
+  return true;
+}
+// Tell the player what the Tax Man took (once, even if he came by several times while you were away).
+function tellTaxGrab(){
+  if (!taxGrab.count) return "";
+  const { amount, count } = taxGrab; taxGrab = { amount: 0, count: 0 };
+  const visits = count > 1 ? ` (he came by ${count} times)` : "";
+  return S.dollars < 0
+    ? `🧾 The Tax Man took the ${money(amount)} you owed straight out of your piggy bank${visits}. You're ${money(-S.dollars)} in DEBT! Earn it back! 😬`
+    : `🧾 The Tax Man took the ${money(amount)} you owed straight out of your piggy bank${visits}. Rude, but fair.`;
 }
 function foreclose(now, voluntary){
   const owed = S.taxes, lost = S.dollars;
   const keep = { company:S.company, allTimeEarned:S.allTimeEarned, clicks:S.clicks, clickEarned:S.clickEarned,
     taxesPaid:S.taxesPaid, refundsCollected:S.refundsCollected, foreclosures:S.foreclosures + (voluntary ? 0 : 1),
-    cyclesSurvived:S.cyclesSurvived, startedAt:S.startedAt, version:2,
+    cyclesSurvived:S.cyclesSurvived, taxGrabs:S.taxGrabs, taxGrabbed:S.taxGrabbed, startedAt:S.startedAt, version:2,
     achievements:S.achievements, playTime:S.playTime, lastMow:S.lastMow, lawnsMowed:S.lawnsMowed,
     lastClean:S.lastClean, roomsCleaned:S.roomsCleaned,
     lastPaper:S.lastPaper, paperRoutes:S.paperRoutes,
@@ -1082,7 +1110,10 @@ function esc(s){ return String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&
 
 function render(){
   const now = Date.now();
-  $("dollars").textContent = money(S.dollars);
+  const debt = S.dollars < 0;
+  $("dollars").classList.toggle("debt", debt);
+  if (debt) $("dollars").innerHTML = `${money(S.dollars)}<span class="debtTag">😬 IN DEBT TO THE TAX MAN</span>`;
+  else $("dollars").textContent = money(S.dollars);
   $("cps").textContent = "per second: " + money(D.cps);
   $("clickInfo").textContent = "+" + money(D.clickPower) + " per click";
 
@@ -1102,7 +1133,8 @@ function render(){
   $("taxInfo").innerHTML =
     `Taxes are ${(BASE_TAX_RATE * 100).toFixed(0)}% of everything you earn × <b>${pct}%</b> ` +
     `(+${D.glowups}% glow-ups, −${S.nerdHelpers}% math nerds)<br>` +
-    `${refund || D.taxMult < 0 ? "Refund growing by" : "Piling up"}: <b>${money(Math.abs(D.cps * BASE_TAX_RATE * D.taxMult))}/s</b> · He visits every ${maxTimer() / HOUR}h`;
+    `${refund || D.taxMult < 0 ? "Refund growing by" : "Piling up"}: <b>${money(Math.abs(D.cps * BASE_TAX_RATE * D.taxMult))}/s</b> · He visits every ${maxTimer() / HOUR}h` +
+    (S.taxes > 0 ? `<br>Don't pay and he'll take it out of your piggy bank himself. You can end up in debt!` : "");
   const pay = $("payBtn");
   if (S.taxes > 0) {
     pay.disabled = S.dollars < S.taxes;
@@ -1170,7 +1202,8 @@ function renderStats(){
     ["Taxes paid (all time)", money(S.taxesPaid)],
     ["Refunds collected", money(S.refundsCollected)],
     ["Tax Man visits survived", S.cyclesSurvived],
-    ["Times foreclosed", S.foreclosures],
+    ["Times the Tax Man took it himself", S.taxGrabs],
+    ["Taxes he took himself", money(S.taxGrabbed)],
     ["Trophies", `${Object.keys(S.achievements).length} / ${ACH.length}`],
     ["Play time", fmtDuration(S.playTime * 1000)],
     ["Playing since", new Date(S.startedAt).toLocaleString()],
@@ -1190,7 +1223,7 @@ function tipHTML(key){
     const each = p.cps * D.indMult[i], share = D.cps ? D.indCps[i] / D.cps * 100 : 0;
     return `<div class="tn">${p.icon} ${esc(p.name)}</div><div class="ts">${esc(p.sector)}</div>
       <div class="td">${esc(p.flavor)}</div>
-      <div>Each one makes <b>${money(each)}/s</b> (base ${money(p.cps)} × ${fmt(D.indMult[i])})</div>
+      <div>Each one makes <b>${money(each)}/s</b> (base ${money(p.cps)} × ${fmt(D.indMult[i])} from glow-ups and trophies)</div>
       <div>${S.owned[i]} owned making <b>${money(D.indCps[i])}/s</b> (${share.toFixed(1)}% of your money)</div>
       <div class="tc">Cost: ${money(buildingCost(i, buyAmt))}${buyAmt > 1 ? " for " + buyAmt : ""}</div>`;
   }
@@ -1332,17 +1365,19 @@ function applyLoaded(obj, isImport){
   // Properties only earn for up to 24 hours while you're gone. The Tax Man's clock still runs the whole time.
   const capped = away > MAX_AWAY;
   if (capped) S.lastTick = now - MAX_AWAY;
-  const before = S.dollars, taxesBefore = S.taxes, foreclosedBefore = S.foreclosures;
-  advance(now);
+  const before = S.dollars, taxesBefore = S.taxes;
+  advance.quiet = true; advance(now); advance.quiet = false; // we'll tell them about any Tax Man visits ourselves
+  const grabbed = taxGrab.amount, grabText = tellTaxGrab();
   recompute(); rebuildStore(); rebuildLog(); $("companyName").value = S.company; render();
-  if (S.foreclosures === foreclosedBefore && away > 60000 && !isImport) {
+  if (away > 60000 && !isImport) {
     showModal("👋 Welcome back!",
       `<p>You were gone for <b>${fmtDuration(away)}</b>.</p>
-       <p>Your properties made <b style="color:var(--lime)">${money(S.dollars - before)}</b> while you were away!</p>
+       <p>Your properties made <b style="color:var(--lime)">${money(S.dollars - before + grabbed)}</b> while you were away!</p>
        ${capped ? `<p class="note">(Properties only earn for up to 24 hours while you're gone.)</p>` : ""}
-       <p>Your taxes went up by <b style="color:var(--red)">${money(S.taxes - taxesBefore)}</b>. The Tax Man gets here in <b>${fmtTime(S.deadline - now)}</b>.</p>`,
+       ${grabText ? `<p style="color:var(--red)">${grabText}</p>` : `<p>Your taxes went up by <b style="color:var(--red)">${money(S.taxes - taxesBefore)}</b>.</p>`}
+       <p>The Tax Man gets here in <b>${fmtTime(S.deadline - now)}</b>.</p>`,
       [["Back to business 😎", hideModal]]);
-  }
+  } else if (grabText) toast(grabText, true);
 }
 function load(){
   let raw = null, old = null;
@@ -1417,6 +1452,7 @@ const NEWS = [
 function newsLine(){
   const left = S.deadline - Date.now();
   if (S.taxes > 0 && left < HOUR) return "BREAKING: The Tax Man was spotted at the end of your street!! PAY YOUR TAXES!!!";
+  if (S.dollars < 0 && Math.random() < 0.4) return pick(["BREAKING: Local tycoon is in DEBT. Piggy bank reportedly 'very hungry.'", "Your piggy bank is on a diet. Not by choice.", "Mom found out you owe the Tax Man money. She's not mad, just disappointed."]);
   if (S.taxes > 0 && S.dollars < S.taxes && Math.random() < 0.4) return "Your taxes are bigger than your money right now. Your Math Nerd is sweating. You're sweating.";
   if (D.taxMult < 0 && Math.random() < 0.4) return "The government mailed you a refund check with a sticky note that says 'u r cool.'";
   if (S.foreclosures > 0 && Math.random() < 0.15) return `Comeback alert: this is your empire's round ${S.foreclosures + 1}. Comebacks are the best.`;
@@ -1609,7 +1645,8 @@ A("Properties", "own_100x", "💯", "Century Club",          "Own 100 of one pro
 A("Properties", "own_all",  "🗂️", "Collector's Edition",   "Own at least one of every property.", () => S.owned.every(n => n >= 1));
 
 [[10, "🪙", "Allowance"], [1e3, "📰", "Paper Route Pro"], [1e6, "💰", "Millionaire Per Second"],
- [1e9, "🤑", "Billionaire Per Second"], [1e12, "🏦", "Trillionaire Moves"], [1e15, "🚀", "Infinite Money Glitch"]]
+ [1e9, "🤑", "Billionaire Per Second"], [1e12, "🏦", "Trillionaire Moves"], [1e15, "🚀", "Infinite Money Glitch"],
+ [1e18, "🌌", "Galactic Allowance"], [1e21, "♾️", "Money Is Just a Number Now"]]
   .forEach(([n, icon, name]) => A("Money", "cps_" + n, icon, name, `Make ${money(n).replace(".000", "")} per second.`, () => D.cps >= n));
 
 [[100, "👆", "Clicky Clicky"], [1000, "🖐️", "Finger Workout"], [10000, "🦾", "Carpal Tunnel Champ"], [100000, "🤖", "Click Legend"]]
@@ -1634,7 +1671,8 @@ A("Taxes", "tax_pay",  "🧾", "Paid the Tax Man",           "Pay your taxes bef
 A("Taxes", "tax_7",    "😇", "Responsible Adult (Kinda)",  "Survive 7 Tax Man visits.",                     () => S.cyclesSurvived >= 7);
 A("Taxes", "tax_1b",   "🏛️", "Biggest Taxpayer Ever",      "Pay $1 billion in taxes total.",                () => S.taxesPaid >= 1e9);
 A("Taxes", "tax_ref",  "🎁", "Free Money",                 "Collect a tax refund.",                         () => S.refundsCollected > 0);
-A("Taxes", "tax_fc",   "😭", "FORECLOSED!",                "Get foreclosed. It happens to the best of us.", () => S.foreclosures >= 1);
+A("Taxes", "tax_fc",   "😭", "He Helped Himself",          "Let the Tax Man take your taxes out of your piggy bank himself.", () => S.taxGrabs >= 1 || S.foreclosures >= 1);
+A("Taxes", "tax_debt", "📉", "In the Red",                 "Go into debt. It happens to the best of us.",   () => S.dollars < 0);
 
 [[600, "🎮", "Just One More Click", "10 minutes"], [3600, "🍕", "Skipped a Snack Break", "1 hour"], [18000, "🌙", "Way Past Bedtime", "5 hours"],
  [86400, "🛋️", "Didn't Go Outside", "24 hours"], [360000, "🌱", "Touch Grass Pls", "100 hours"]]
@@ -1660,9 +1698,10 @@ function checkAchievements(quiet){
     let ok = false; try { ok = a.test(); } catch (e) { ok = false; }
     if (ok) { S.achievements[a.id] = Date.now(); fresh.push(a); }
   }
+  if (fresh.length) recompute(); // trophies boost your money
   if (fresh.length && !quiet) {
-    if (fresh.length <= 3) fresh.forEach(a => toast(`🏆 TROPHY UNLOCKED: ${a.name}`, "gold"));
-    else toast(`🏆 ${fresh.length} trophies unlocked at once!!`, "gold");
+    if (fresh.length <= 3) fresh.forEach(a => toast(`🏆 TROPHY UNLOCKED: ${a.name} (+${TROPHY_BONUS * 100}% money!)`, "gold"));
+    else toast(`🏆 ${fresh.length} trophies unlocked at once!! (+${Math.round(fresh.length * TROPHY_BONUS * 100)}% money!)`, "gold");
   }
   $("achTabCount").textContent = Object.keys(S.achievements).length + "/" + ACH.length;
   if (fresh.length && !$("tab-ach").hidden) renderAchievements();
@@ -1674,7 +1713,8 @@ function renderAchievements(){
   if (key === lastAchKey && $("achievements").childElementCount) return;
   lastAchKey = key;
   let html = `<div class="achHead"><span>Trophies</span><span>${got} / ${ACH.length}</span></div>
-    <div class="achBar"><div style="width:${(got / ACH.length * 100).toFixed(1)}%"></div></div>`;
+    <div class="achBar"><div style="width:${(got / ACH.length * 100).toFixed(1)}%"></div></div>
+    <div class="note" style="margin:-4px 0 8px">🏆 Trophy power: every trophy makes all your properties earn ${TROPHY_BONUS * 100}% more. Right now: <b>+${Math.round(got * TROPHY_BONUS * 100)}%</b></div>`;
   for (const cat of ACH_CATS) {
     const list = ACH.filter(a => a.cat === cat), n = list.filter(a => S.achievements[a.id]).length;
     html += `<div class="achCat">${esc(cat)}<span>${n}/${list.length}</span></div><div class="achGrid">` +
